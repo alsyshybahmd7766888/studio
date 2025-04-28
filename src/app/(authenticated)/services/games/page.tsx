@@ -13,17 +13,17 @@ const gamesData = [
   { name: 'شدات ببجي', link: '#' }, // Keep link '#' for now, specific page TBD
   { name: 'بوبجي نيوستيت', link: '#' },
   { name: 'فري فاير', link: '#' },
-  { name: 'كلاش اوف كلانس', link: '#' },
+  { name: 'كلاش اوف كلانس', link: '#' }, // Corrected name
   { name: 'كلاش رويال', link: '#' },
   { name: 'براول ستارز', link: '#' },
-  { name: 'كول اوف ديوتي موبايل', link: '#' },
+  { name: 'كول اوف ديوتي موبايل', link: '#' }, // Corrected name
   { name: 'موبايل ليجند', link: '#' },
   { name: 'لوردس موبايل', link: '#' },
   { name: 'لعبة بوم بيتش', link: '#' },
   { name: 'LIKEE - تطبيق لايكي', link: '#' },
   { name: 'YoYo Coins - يويو كوينز', link: '#' },
   { name: 'انتقام السلاطين', link: '#' },
-  { name: '8 Ball Pool - بلياردو', link: '#' },
+  { name: '8 Ball Pool - بلياردو', link: '#' }, // Corrected name
   { name: 'BIGO LIVE - بيجو لايف', link: '#' },
   { name: 'BoBo Live - بوبو لايف', link: '#' },
   { name: 'IMO Live - ايمو لايف', link: '#' },
@@ -51,7 +51,7 @@ export default function GamesPage() {
         toast({
             title: "تحديث",
             description: "تم تحديث قائمة الألعاب.",
-            variant: 'default', // Uses primary color
+            variant: 'default', // Uses primary color style
         });
     };
 
@@ -74,19 +74,17 @@ export default function GamesPage() {
                 variant: 'default', // Use default/info style
              });
              console.log(`No specific page defined or feature not ready for ${game.name}`);
+             // Reset active state if not navigating
              setActiveGame(null);
           }
-           if (!game.link || game.link === '#') {
-                setTimeout(() => setActiveGame(null), 300);
-           }
       }, 200);
     };
 
 
   return (
-    // Use bg-background (emerald green)
+    // Use bg-background
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Header - Primary (dark green), White text */}
+      {/* Header - Primary background, Primary Foreground text */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-primary px-4 py-2 text-primary-foreground shadow-md">
          {/* Back button to /services */}
         <Link href="/services" passHref>
@@ -95,9 +93,9 @@ export default function GamesPage() {
             <span className="sr-only">رجوع</span>
           </Button>
         </Link>
-        <h1 className="text-lg font-medium">معرض الألعاب</h1> {/* White text, medium weight */}
-         {/* Refresh button - Orange icon */}
-         <Button variant="ghost" size="icon" className="text-orange-500 hover:bg-primary/80" onClick={handleRefresh}> {/* Direct orange */}
+        <h1 className="text-lg font-medium">معرض الألعاب</h1> {/* Primary Foreground text */}
+         {/* Refresh button - Accent icon */}
+         <Button variant="ghost" size="icon" className="text-accent hover:bg-primary/80" onClick={handleRefresh}>
             <RefreshCw className="h-5 w-5" />
             <span className="sr-only">تحديث</span>
         </Button>

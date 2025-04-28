@@ -25,30 +25,31 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   return (
+    // Use bg-background
     <div className="flex min-h-screen flex-col items-center bg-background px-4 pt-[32px] text-foreground">
       {/* Status Bar Area (Placeholder) */}
       <div className="h-[24px] w-full"></div>
 
        {/* Logo Header */}
       <div className="mb-8 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-card shadow-lg">
-         {/* Replace with 4NOW logo */}
+         {/* 4NOW logo using theme colors */}
          <span className="text-3xl font-bold">
-           <span className="text-green-700">٤</span>
-           <span className="text-orange-500">Now</span>
+           <span className="text-primary">٤</span> {/* Primary color */}
+           <span className="text-accent">Now</span> {/* Accent color */}
          </span>
          {/* <Image src="/logos/4now-logo.svg" alt="4NOW Logo" width={96} height={96} /> */}
       </div>
 
-       {/* White Container */}
+       {/* Card Container */}
       <div className="w-full max-w-md rounded-[var(--radius-lg)] bg-card p-4 shadow-xl">
         {/* Personal Information Section */}
         <div className="mb-4">
            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
-             <Separator className="flex-1" />
+             <Separator className="flex-1 bg-border" /> {/* Use border color for separator */}
              <h2 className="whitespace-nowrap text-lg font-medium text-card-foreground">
                البيانات الشخصية
              </h2>
-             <Separator className="flex-1" />
+             <Separator className="flex-1 bg-border" />
            </div>
 
            <div className="mt-3 space-y-3">
@@ -57,7 +58,7 @@ export default function RegisterPage() {
               <Input
                 type="text"
                 placeholder="الاسم الرباعي مع اللقب"
-                className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground"
+                className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground text-foreground"
                 dir="rtl"
               />
               <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" />
@@ -67,7 +68,7 @@ export default function RegisterPage() {
               <Input
                 type="text"
                 placeholder="النشاط التجاري"
-                className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground"
+                 className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground text-foreground"
                 dir="rtl"
               />
               <Store className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" />
@@ -77,7 +78,7 @@ export default function RegisterPage() {
               <Input
                 type="tel"
                 placeholder="رقم الهاتف"
-                className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground"
+                 className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground text-foreground"
                 dir="rtl"
               />
               <Phone className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" />
@@ -87,7 +88,7 @@ export default function RegisterPage() {
               <Input
                 type="text"
                 placeholder="العنوان"
-                className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground"
+                 className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground text-foreground"
                 dir="rtl"
               />
               <MapPin className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" />
@@ -98,11 +99,11 @@ export default function RegisterPage() {
         {/* Login Details Section */}
         <div className="mb-4">
            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
-             <Separator className="flex-1" />
+             <Separator className="flex-1 bg-border" />
              <h2 className="whitespace-nowrap text-lg font-medium text-card-foreground">
                بيانات الدخول
              </h2>
-             <Separator className="flex-1" />
+             <Separator className="flex-1 bg-border" />
            </div>
 
            <div className="mt-3 space-y-3">
@@ -111,7 +112,7 @@ export default function RegisterPage() {
               <Input
                 type="text"
                 placeholder="اسم الدخول أو رقم الهاتف"
-                className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground"
+                 className="h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground text-foreground"
                 dir="rtl"
               />
                <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" />
@@ -121,7 +122,7 @@ export default function RegisterPage() {
               <Input
                 type={showPassword ? 'text' : 'password'}
                 placeholder="كلمة المرور"
-                className="h-12 rounded-[var(--radius)] border bg-input px-10 text-base placeholder-muted-foreground" // Padding left and right for icons
+                 className="h-12 rounded-[var(--radius)] border bg-input px-10 text-base placeholder-muted-foreground text-foreground" // Padding left and right for icons
                 dir="rtl"
               />
               <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" />
@@ -139,7 +140,7 @@ export default function RegisterPage() {
               <Input
                  type={showConfirmPassword ? 'text' : 'password'}
                  placeholder="تأكيد كلمة المرور"
-                 className="h-12 rounded-[var(--radius)] border bg-input px-10 text-base placeholder-muted-foreground"
+                  className="h-12 rounded-[var(--radius)] border bg-input px-10 text-base placeholder-muted-foreground text-foreground"
                  dir="rtl"
               />
               <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" />
@@ -158,13 +159,13 @@ export default function RegisterPage() {
         {/* Document Type Tabs */}
         <Tabs defaultValue="personal-id" className="mt-4 w-full">
            <TabsList className="grid h-auto w-full grid-cols-4 gap-2 bg-transparent p-0">
-            {/* Active Tab: bg-destructive (red), text-destructive-foreground (white) */}
+            {/* Active Tab: Use accent color */}
              <TabsTrigger
               value="personal-id"
               className={cn(
-                 "h-10 rounded-[var(--radius)] text-sm font-medium data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground data-[state=active]:shadow-md",
-                 // Inactive Tab: bg-card (white), border-destructive (red border), text-destructive (red text)
-                 "border border-destructive bg-card text-destructive data-[state=inactive]:hover:bg-destructive/10"
+                 "h-10 rounded-[var(--radius)] text-sm font-medium data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md",
+                 // Inactive Tab: Use secondary colors or outline variant
+                 "border border-accent bg-card text-accent data-[state=inactive]:hover:bg-accent/10"
               )}
             >
               بطاقة شخصية
@@ -172,8 +173,8 @@ export default function RegisterPage() {
             <TabsTrigger
               value="passport"
               className={cn(
-                "h-10 rounded-[var(--radius)] text-sm font-medium data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground data-[state=active]:shadow-md",
-                "border border-destructive bg-card text-destructive data-[state=inactive]:hover:bg-destructive/10"
+                "h-10 rounded-[var(--radius)] text-sm font-medium data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md",
+                "border border-accent bg-card text-accent data-[state=inactive]:hover:bg-accent/10"
               )}
             >
               جواز
@@ -181,8 +182,8 @@ export default function RegisterPage() {
              <TabsTrigger
               value="commercial-reg"
                className={cn(
-                "h-10 rounded-[var(--radius)] text-sm font-medium data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground data-[state=active]:shadow-md",
-                 "border border-destructive bg-card text-destructive data-[state=inactive]:hover:bg-destructive/10"
+                "h-10 rounded-[var(--radius)] text-sm font-medium data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md",
+                 "border border-accent bg-card text-accent data-[state=inactive]:hover:bg-accent/10"
               )}
             >
               سجل تجاري
@@ -190,8 +191,8 @@ export default function RegisterPage() {
             <TabsTrigger
               value="family-card"
                className={cn(
-                "h-10 rounded-[var(--radius)] text-sm font-medium data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground data-[state=active]:shadow-md",
-                 "border border-destructive bg-card text-destructive data-[state=inactive]:hover:bg-destructive/10"
+                "h-10 rounded-[var(--radius)] text-sm font-medium data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md",
+                 "border border-accent bg-card text-accent data-[state=inactive]:hover:bg-accent/10"
               )}
             >
               بطاقة عائلية
@@ -203,19 +204,21 @@ export default function RegisterPage() {
 
         {/* Image Upload Placeholders */}
         <div className="mt-3 grid grid-cols-2 gap-3">
-           <div className="aspect-square w-full cursor-pointer rounded-[var(--radius)] bg-muted/50 flex items-center justify-center border-2 border-dashed border-muted-foreground/50 hover:border-primary/50 hover:bg-muted/70">
+           {/* Use muted background and border */}
+           <div className="aspect-square w-full cursor-pointer rounded-[var(--radius)] bg-muted/50 flex items-center justify-center border-2 border-dashed border-muted-foreground/50 hover:border-primary/50 hover:bg-muted">
             <UploadCloud className="h-10 w-10 text-muted-foreground/70" />
             {/* Add input type="file" hidden and trigger via onClick */}
            </div>
-           <div className="aspect-square w-full cursor-pointer rounded-[var(--radius)] bg-muted/50 flex items-center justify-center border-2 border-dashed border-muted-foreground/50 hover:border-primary/50 hover:bg-muted/70">
+           <div className="aspect-square w-full cursor-pointer rounded-[var(--radius)] bg-muted/50 flex items-center justify-center border-2 border-dashed border-muted-foreground/50 hover:border-primary/50 hover:bg-muted">
              <UploadCloud className="h-10 w-10 text-muted-foreground/70" />
             {/* Add input type="file" hidden and trigger via onClick */}
           </div>
         </div>
 
-         {/* Register Button */}
+         {/* Register Button - Use primary color */}
         <Button
-           className="mt-4 h-12 w-full rounded-[var(--radius)] bg-primary text-base font-medium text-primary-foreground"
+           variant="default"
+           className="mt-4 h-12 w-full rounded-[var(--radius)] text-base font-medium"
            onClick={() => console.log('Register attempt')} // Replace with actual register logic
         >
           تسجيل
@@ -234,9 +237,9 @@ export default function RegisterPage() {
       </div>
 
        {/* Footer */}
-      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-white">
+      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-muted-foreground">
          {/* Footer content removed as requested */}
-         {/* برمجة وتصميم (يمن روبوت) 774541452 */}
+         برمجة وتصميم (يمن روبوت) 774541452
       </footer>
     </div>
   );

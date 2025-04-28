@@ -1,8 +1,7 @@
-
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link'; // Import Link
+import Link from 'next/link';
 import {
   Menu,
   Wallet,
@@ -25,7 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import Image from 'next/image'; // Import Image
+import Image from 'next/image';
 
 // Custom SimCard Icon (Inline SVG) - Reusable component
 const SimCardIcon = () => (
@@ -61,13 +60,13 @@ const navItems = [
     { label: 'المزيد', icon: List, href: '#' }, // Placeholder href
 ];
 
-export default function DashboardPage() { // Renamed component
+export default function DashboardPage() {
   const pathname = usePathname();
 
   return (
-     // Use the 4NOW Green background
+     // Use the new background color
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-       {/* Header - Use Primary (Darker Green) */}
+       {/* Header - Use Primary color */}
        <header className="sticky top-0 z-40 flex h-20 items-center justify-between bg-primary px-4 py-3 text-primary-foreground shadow-md">
         <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/80">
           <Menu className="h-6 w-6" />
@@ -98,13 +97,13 @@ export default function DashboardPage() { // Renamed component
 
       {/* Main Content Area */}
       <main className="flex flex-1 flex-col items-center pb-20 pt-8">
-         {/* Logo Section - Use Card (White) background */}
+         {/* Logo Section - Use Card background */}
          <div className="mb-10 flex flex-col items-center text-center">
              <div className="mb-3 flex h-24 w-24 items-center justify-center rounded-full bg-card shadow-lg">
                   {/* 4NOW Logo */}
                  <span className="text-3xl font-bold">
-                     <span className="text-green-700">٤</span> {/* Use specific green */}
-                     <span className="text-orange-500">Now</span> {/* Use specific orange */}
+                     <span className="text-primary">٤</span> {/* Primary color */}
+                     <span className="text-accent">Now</span> {/* Accent color */}
                  </span>
              </div>
              <p className="mt-1 text-sm font-medium text-muted-foreground italic">
@@ -112,9 +111,9 @@ export default function DashboardPage() { // Renamed component
              </p>
          </div>
 
-        {/* Favorite Services Section - White Card Background */}
+        {/* Favorite Services Section - Card Background */}
         <section className="w-full max-w-md rounded-t-[var(--radius-lg)] bg-card p-6 shadow-inner">
-           {/* Use Card Foreground (Dark Gray) for Title */}
+           {/* Use Card Foreground for Title */}
            <h2 className="mb-5 text-center text-lg font-semibold text-card-foreground">
             الخدمات والأقسام المفضلة
           </h2>
@@ -129,16 +128,16 @@ export default function DashboardPage() { // Renamed component
                   className="h-16 w-16 rounded-full border-2 border-primary bg-card text-primary hover:bg-primary/10"
                   aria-label="اختر خدمة مفضلة"
                 >
-                   <Plus className="h-7 w-7" /> {/* Green Plus Icon */}
+                   <Plus className="h-7 w-7" /> {/* Primary Plus Icon */}
                  </Button>
-                 {/* Muted Foreground (Medium Gray) for Text */}
+                 {/* Muted Foreground for Text */}
                  <span className="text-xs text-muted-foreground">اختر</span>
               </div>
             ))}
           </div>
         </section>
 
-        {/* Main Icons Grid - White Card Background */}
+        {/* Main Icons Grid - Inherit Background */}
         <section className="mt-8 w-full max-w-md px-6">
            {/* Grid layout */}
            <div className="grid grid-cols-2 gap-4">
@@ -149,7 +148,7 @@ export default function DashboardPage() { // Renamed component
                    {/* Card Styling */}
                    <Card className="cursor-pointer overflow-hidden rounded-[var(--radius)] bg-card shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-1 active:shadow-sm active:translate-y-0">
                      <CardContent className="flex flex-col items-center justify-center p-5 text-center">
-                       {/* Icon Circle - Use Secondary Color from Theme */}
+                       {/* Icon Circle - Use Secondary Color */}
                        <div className="mb-3 flex h-14 w-14 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
                          {typeof IconComponent === 'function' ? <IconComponent className="h-7 w-7" /> : <item.icon className="h-7 w-7" />}
                        </div>
@@ -164,7 +163,7 @@ export default function DashboardPage() { // Renamed component
         </section>
       </main>
 
-       {/* Bottom Navigation - White Card Background */}
+       {/* Bottom Navigation - Card Background */}
       <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around rounded-t-[var(--radius-lg)] border-t border-border/50 bg-card shadow-[0_-4px_10px_-6px_rgba(0,0,0,0.1)]">
          {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -176,7 +175,7 @@ export default function DashboardPage() { // Renamed component
                  className={cn(
                   "flex h-full flex-col items-center justify-center p-1 text-xs font-medium transition-colors duration-200",
                   isActive
-                    ? 'text-orange-500' // Use direct orange color for active Home
+                    ? 'text-accent' // Use Accent color for active item
                     : 'text-muted-foreground hover:text-card-foreground' // Use Card Foreground for hover
                 )}
               >
@@ -190,4 +189,3 @@ export default function DashboardPage() { // Renamed component
     </div>
   );
 }
-

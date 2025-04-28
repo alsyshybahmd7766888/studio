@@ -40,31 +40,31 @@ export default function LoginPage() {
   };
 
   return (
-    // Use bg-background (emerald green)
+    // Use bg-background
     <div className="flex min-h-screen flex-col items-center bg-background px-4 pt-[32px] text-foreground">
       {/* Status Bar Area (Placeholder) - Assumed transparent bg */}
       <div className="h-[24px] w-full"></div>
 
       {/* Logo Header */}
-       {/* Container: 120x120px, white bg, centered, top padding 32px */}
+       {/* Container: 120x120px, card bg, centered, top padding 32px */}
       <div className="mb-8 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-card shadow-lg">
         {/* 4NOW Logo */}
          <span className="text-3xl font-bold">
-           <span className="text-green-700">٤</span> {/* Use specific green */}
-           <span className="text-orange-500">Now</span> {/* Use specific orange */}
+           <span className="text-primary">٤</span> {/* Use primary color */}
+           <span className="text-accent">Now</span> {/* Use accent color */}
          </span>
          {/* Alternatively, use an Image component if you have a logo file */}
          {/* <Image src="/logos/4now-logo.svg" alt="4NOW Logo" width={96} height={96} /> */}
       </div>
 
-      {/* White Container */}
-       {/* Container: White bg, rounded-2xl (24px), full width minus padding (16px each side), internal padding 16px */}
+      {/* Card Container */}
+       {/* Container: Card bg, rounded-lg (1rem), full width minus padding, internal padding 1rem */}
       <div className="w-full max-w-md rounded-[var(--radius-lg)] bg-card p-4 shadow-xl"> {/* p-4 for 16px padding */}
         {/* Input Fields */}
         <div className="space-y-3"> {/* space-y-3 for 12px gap */}
            {/* Username/Phone Input */}
            <div className="relative">
-             {/* Input: h-12 (48px), rounded-md (8px), light gray bg (#F9F9F9) or white with border, 16sp text, placeholder #9E9E9E */}
+             {/* Input: h-12 (48px), rounded (0.5rem), input bg (white), text-base, placeholder muted */}
             <Input
               type="text"
               placeholder="اسم الدخول أو رقم الهاتف"
@@ -73,11 +73,11 @@ export default function LoginPage() {
               // Use cn to combine base styles with specific needs
                className={cn(
                  "h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground", // pr-10 for icon space
-                 "border-border" // Ensure border color from theme
+                 "border-border text-foreground" // Ensure border color and text color from theme
               )}
               dir="rtl" // Ensure placeholder is RTL
             />
-             {/* Icon: User/Mail, 20px size, color #B0B0B0 (muted-foreground/70) */}
+             {/* Icon: User/Mail, 20px size, color muted-foreground/70 */}
             <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" /> {/* Icon */}
           </div>
 
@@ -90,52 +90,53 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               className={cn(
                  "h-12 rounded-[var(--radius)] border bg-input pr-10 text-base placeholder-muted-foreground",
-                 "border-border"
+                 "border-border text-foreground"
               )}
               dir="rtl"
             />
-             {/* Icon: Lock/Shield, 20px size, color #B0B0B0 */}
+             {/* Icon: Lock/Shield, 20px size, color muted-foreground/70 */}
             <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" /> {/* Icon */}
           </div>
         </div>
 
         {/* Login Button */}
-         {/* Button: h-48px, full width, dark green bg (#009944), white text 16sp/500, rounded 8px, mt-16px */}
+         {/* Button: h-48px, full width, primary bg, primary-foreground text 16sp/500, rounded 0.5rem, mt-16px */}
         <Button
-           className="mt-4 h-12 w-full rounded-[var(--radius)] bg-[#009944] text-base font-medium text-primary-foreground hover:bg-[#008833]" // Specific dark green, white text
+           variant="default" // Use primary variant
+           className="mt-4 h-12 w-full rounded-[var(--radius)] text-base font-medium"
            onClick={handleLogin} // Call handleLogin on click
         >
           دخول
         </Button>
 
         {/* Biometric Icons */}
-         {/* Icons: 64px diameter, yellow (#FFC107) & light green (#A5F6A0) bg, white icons (smile, fingerprint), 24px gap, mt-16px */}
+         {/* Icons: 64px diameter, accent (#FF6F3C) & secondary (#E0E0E0) bg, white/primary icons, 24px gap, mt-16px */}
         <div className="mt-4 flex items-center justify-center space-x-6 rtl:space-x-reverse"> {/* space-x-6 for 24px gap */}
           <button
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-[#FFC107]" // Yellow background
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-accent" // Accent background
             aria-label="الدخول باستخدام الوجه"
             onClick={() => console.log('Face ID login')}
           >
-            <Smile className="h-8 w-8 text-white" />
+            <Smile className="h-8 w-8 text-accent-foreground" /> {/* Use accent foreground */}
           </button>
           <button
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-[#A5F6A0]" // Light green background
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary" // Secondary background
             aria-label="الدخول باستخدام البصمة"
              onClick={() => console.log('Fingerprint login')}
           >
-            <Fingerprint className="h-8 w-8 text-white" />
+            <Fingerprint className="h-8 w-8 text-secondary-foreground" /> {/* Use secondary foreground */}
           </button>
         </div>
 
         {/* Secondary Buttons */}
-         {/* Buttons: h-48px, ~half width each, dark green bg, white text 16sp/400, rounded 8px, 16px gap, mt-16px */}
+         {/* Buttons: h-48px, ~half width each, secondary bg, secondary-foreground text 16sp/400, rounded 0.5rem, 16px gap, mt-16px */}
         <div className="mt-4 grid grid-cols-2 gap-4"> {/* gap-4 for 16px */}
           <Link href="/register" passHref>
-             <Button variant="default" className="h-12 w-full rounded-[var(--radius)] bg-[#009944] text-base font-normal text-primary-foreground hover:bg-[#008833]">
+             <Button variant="secondary" className="h-12 w-full rounded-[var(--radius)] text-base font-normal">
                فتح حساب
              </Button>
           </Link>
-          <Button variant="default" className="h-12 w-full rounded-[var(--radius)] bg-[#009944] text-base font-normal text-primary-foreground hover:bg-[#008833]" onClick={() => console.log('Forgot password')}>
+          <Button variant="secondary" className="h-12 w-full rounded-[var(--radius)] text-base font-normal" onClick={() => console.log('Forgot password')}>
             استعادة كلمة السر
           </Button>
         </div>
@@ -143,9 +144,9 @@ export default function LoginPage() {
         {/* Contact Info & Links */}
          <div className="mt-4 space-y-2 text-center"> {/* mt-16px, space-y-8px */}
            {/* Contact info removed */}
-           {/* Link: 14sp/300, blue color (#0066CC), mt-8px */}
+           {/* Link: 14sp/300, primary color, mt-8px */}
            <Link href="/privacy" passHref>
-              <span className="cursor-pointer text-sm font-light text-blue-600 underline">
+              <span className="cursor-pointer text-sm font-light text-primary underline hover:text-primary/80">
                  تعليمات | سياسة الخصوصية
               </span>
            </Link>
@@ -153,9 +154,10 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-       {/* Footer: 12sp/300, white text, bottom aligned */}
-      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-white">
+       {/* Footer: 12sp/300, muted-foreground text, bottom aligned */}
+      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-muted-foreground">
          {/* Footer content removed */}
+         برمجة وتصميم (يمن روبوت) 774541452
       </footer>
     </div>
   );

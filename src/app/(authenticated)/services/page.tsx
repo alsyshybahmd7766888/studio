@@ -4,16 +4,15 @@ import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 // Update icons if needed, ensure they are relevant
-import { ArrowRight, RefreshCw, Smartphone, Repeat, SmartphoneCharging, Headset, LayoutGrid, Wifi, CreditCard } from 'lucide-react';
+import { ArrowRight, RefreshCw, Smartphone, Repeat, SmartphoneCharging, Headset, LayoutGrid, Wifi, CreditCard, Gamepad2, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ServiceCard } from '@/components/service-card'; // Ensure this component uses new theme colors
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
 
-// Services data - Updated based on 4ME structure and new theme proposal
-// Use relevant Lucide icons or keep text for icon circles
+// Services data - Refreshed structure and icons
 const servicesData = [
-  { icon: SmartphoneCharging, buttonText: 'كبيبة السداد', href: '/services/recharge' }, // Renamed route
+  { icon: SmartphoneCharging, buttonText: 'كبيبة السداد', href: '/services/recharge' },
   { icon: Repeat, buttonText: 'تحويل لحساب عميل', href: '#' }, // Placeholder
   { iconText: 'MTN', buttonText: 'باقات MTN', href: '#' }, // Placeholder
   { iconText: 'سبافون', buttonText: 'باقات سبافون', href: '#' }, // Placeholder
@@ -22,9 +21,9 @@ const servicesData = [
   { icon: Headset, buttonText: 'الدعم الفني', href: '#' }, // Placeholder
   { icon: LayoutGrid, buttonText: 'الخدمات الإضافية', href: '#' }, // Placeholder
   { icon: Wifi, buttonText: 'عدن نت', href: '#' }, // Placeholder
-  { icon: CreditCard, buttonText: 'شرائح شبكة YOU', href: '/services/simcards' }, // Renamed route
-   { iconText: 'ألعاب', buttonText: 'معرض الألعاب', href: '/services/games' }, // Renamed route
-   { iconText: 'برامج', buttonText: 'البرامج', href: '/services/programs' }, // Renamed route
+  { icon: CreditCard, buttonText: 'شرائح شبكة YOU', href: '/services/simcards' },
+   { icon: Gamepad2, buttonText: 'معرض الألعاب', href: '/services/games' }, // Use Gamepad2
+   { icon: ShoppingCart, buttonText: 'البرامج', href: '/services/programs' }, // Use ShoppingCart
 ];
 
 export default function ServicesPage() {
@@ -37,7 +36,7 @@ export default function ServicesPage() {
         toast({
             title: "تحديث",
             description: "تم تحديث قائمة الخدمات.",
-            variant: 'default', // Uses primary (dark green) style
+            variant: 'default', // Uses primary style
         });
     };
 
@@ -57,34 +56,35 @@ export default function ServicesPage() {
              toast({
                 title: "قيد التطوير",
                 description: `خدمة ${service.buttonText} ستتوفر قريباً.`,
-                variant: 'default',
+                variant: 'default', // Consider a 'warning' or 'info' variant if added
              });
             console.log(`No specific page defined or feature not ready for ${service.buttonText}`);
-             setActiveService(null);
+             // Keep active state briefly for visual feedback even if not navigating
           }
+           // Reset active state after a short delay only if not navigating
            if (!service.href || service.href === '#') {
                 setTimeout(() => setActiveService(null), 300);
            }
-      }, 200);
+      }, 200); // Short delay for visual feedback
     };
 
   return (
-     // Use bg-background (emerald green)
+     // Use bg-background
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Header - Primary (darker green) background, Primary Foreground (white) text */}
+      {/* Header - Primary background, Primary Foreground text */}
        <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-primary px-4 py-2 text-primary-foreground shadow-md">
         {/* Link back to dashboard */}
         <Link href="/dashboard" passHref>
-             {/* White back arrow */}
+             {/* Primary Foreground back arrow */}
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/80">
                 <ArrowRight className="h-5 w-5" /> {/* Use ArrowRight for RTL back */}
                 <span className="sr-only">رجوع</span>
             </Button>
         </Link>
-         {/* White title */}
-        <h1 className="text-lg font-medium">الخدمات</h1> {/* Adjusted font weight */}
-          {/* Refresh button - uses accent color (orange defined implicitly or explicitly) */}
-        <Button variant="ghost" size="icon" className="text-orange-500 hover:bg-primary/80" onClick={handleRefresh}> {/* Directly use orange hex */}
+         {/* Primary Foreground title */}
+        <h1 className="text-lg font-medium">الخدمات</h1>
+          {/* Refresh button - uses accent color */}
+        <Button variant="ghost" size="icon" className="text-accent hover:bg-primary/80" onClick={handleRefresh}>
             <RefreshCw className="h-5 w-5" />
             <span className="sr-only">تحديث</span>
         </Button>

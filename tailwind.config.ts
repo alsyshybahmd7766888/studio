@@ -64,12 +64,12 @@ export default {
   		},
   		borderRadius: {
         // Use the new CSS variables for radius
-        DEFAULT: 'var(--radius)', // Default uses the base radius (8px)
-  			lg: 'var(--radius-lg)', // Large radius (24px)
-  			md: 'calc(var(--radius) - 2px)', // Medium (6px) - adjust if needed
-  			sm: 'calc(var(--radius) - 4px)', // Small (4px) - adjust if needed
-        xl: 'calc(var(--radius-lg) - 8px)', // Example: 16px
-        '2xl': 'var(--radius-lg)', // Example: Use large radius for 2xl
+        DEFAULT: 'var(--radius)', // Base radius (e.g., 0.5rem)
+  			lg: 'var(--radius-lg)', // Large radius (e.g., 1rem)
+  			md: 'calc(var(--radius) - 2px)', // Medium
+  			sm: 'calc(var(--radius) - 4px)', // Small
+        xl: 'calc(var(--radius-lg) - 4px)', // Adjust derived sizes if needed
+        '2xl': 'var(--radius-lg)',
         button: 'var(--radius)', // Ensure buttons use the base radius
   		},
       fontFamily: {

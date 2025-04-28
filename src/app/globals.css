@@ -6,58 +6,49 @@
 
 @layer base {
   :root {
-    /* 4NOW Theme - Based on Specifications */
-    /* Backgrounds */
-    --background: 145 100% 32%; /* Emerald Green (#00A651) - Main page background */
-    --foreground: 0 0% 100%; /* White - Default text on green background */
+    /* New Modern Theme */
+    --background: 210 20% 98%; /* Very light blue-grey */
+    --foreground: 210 15% 20%; /* Dark Slate Grey */
 
-    /* Cards / Containers */
-    --card: 0 0% 100%; /* White (#FFFFFF) - Main content containers */
-    --card-foreground: 210 10% 23%; /* Dark Gray (#333333) - Text on white cards */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 210 15% 20%; /* Dark Slate Grey */
 
-    /* Popovers (Keep consistent with Card) */
     --popover: 0 0% 100%; /* White */
-    --popover-foreground: 210 10% 23%; /* Dark Gray */
+    --popover-foreground: 210 15% 20%; /* Dark Slate Grey */
 
-    /* Primary Action Color (Buttons) */
-    --primary: 145 100% 30%; /* Darker Green (#009944) - Primary buttons */
-    --primary-foreground: 0 0% 100%; /* White - Text on primary buttons */
+    --primary: 195 53% 45%; /* Steel Blue */
+    --primary-foreground: 0 0% 100%; /* White */
 
-    /* Secondary (Less used, define for consistency) */
-    --secondary: 145 50% 50%; /* Lighter shade of primary green */
-    --secondary-foreground: 0 0% 100%; /* White */
+    --secondary: 210 20% 90%; /* Light grey */
+    --secondary-foreground: 195 53% 25%; /* Darker Steel Blue */
 
-    /* Muted (Placeholders, subtle text) */
-    --muted: 0 0% 95%; /* Very light gray (#F2F2F2) - Subtle backgrounds if needed */
-    --muted-foreground: 0 0% 62%; /* Medium Gray (#9E9E9E) - Placeholder text */
+    --muted: 210 20% 94%; /* Slightly darker light grey */
+    --muted-foreground: 210 10% 45%; /* Slate Grey */
 
-    /* Accent (For specific highlights, might be overridden) */
-    --accent: 17 100% 61%; /* Bright Orange (#FF6F3C) - Default accent, can be overridden */
+    --accent: 30 95% 55%; /* Vibrant Orange */
     --accent-foreground: 0 0% 100%; /* White */
 
-    /* Destructive (Errors, critical actions, used for red tabs) */
-    --destructive: 0 100% 61%; /* Red (#FF3B30) - For active tabs */
+    --destructive: 0 72% 51%; /* Standard Red */
     --destructive-foreground: 0 0% 100%; /* White */
 
-    /* Borders */
-    --border: 0 0% 88%; /* Light Gray (#E0E0E0) - Input field borders */
-    --input: 0 0% 98%; /* Input background - Slightly off-white (#F9F9F9) or use --card */
-    --ring: 145 90% 40%; /* Green Ring for focus */
+    --border: 210 15% 88%; /* Light grey border */
+    --input: 0 0% 100%; /* White input bg */
+    --ring: 195 53% 55%; /* Slightly lighter Steel Blue for ring */
 
     /* Radius */
-    --radius: 8px; /* Base radius for buttons, inputs */
-    --radius-lg: 24px; /* Radius for large containers */
+    --radius: 0.5rem; /* 8px */
+    --radius-lg: 1rem; /* 16px */
 
-    /* Chart Colors (Keep defaults or adjust if needed later) */
-    --chart-1: 187 70% 35%;
-    --chart-2: 207 70% 30%;
-    --chart-3: 17 90% 60%;
+    /* Chart Colors (Update if charts are used) */
+    --chart-1: 195 70% 50%;
+    --chart-2: 30 80% 60%;
+    --chart-3: 120 60% 50%;
     --chart-4: 210 10% 60%;
-    --chart-5: 170 65% 45%;
+    --chart-5: 280 70% 60%;
 
-    /* Sidebar colors (Define using new theme if sidebar is used) */
-    --sidebar-background: var(--primary);
-    --sidebar-foreground: var(--primary-foreground);
+    /* Sidebar colors (Align with new theme) */
+    --sidebar-background: var(--card); /* Use card bg */
+    --sidebar-foreground: var(--card-foreground); /* Use card fg */
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
     --sidebar-accent: var(--accent);
@@ -67,39 +58,48 @@
   }
 
   .dark {
-    /* Define dark theme if needed, for now mirrors light theme adjusted */
-    --background: 210 15% 12%;
-    --foreground: 210 20% 95%;
-    --card: 210 15% 18%;
-    --card-foreground: 210 20% 95%;
-    --popover: 210 15% 15%;
-    --popover-foreground: 210 20% 95%;
-    --primary: 145 80% 40%; /* Adjusted Green */
-    --primary-foreground: 210 15% 95%;
-    --secondary: 145 60% 50%; /* Adjusted Secondary Green */
-    --secondary-foreground: 210 15% 95%;
-    --muted: 210 15% 25%;
-    --muted-foreground: 0 0% 62%; /* #9E9E9E */
-    --accent: 17 95% 65%; /* Adjusted Orange */
-    --accent-foreground: 210 15% 15%;
-    --destructive: 0 80% 60%; /* Adjusted Red */
-    --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 30%; /* Darker Gray Border */
-    --input: 210 15% 22%;
-    --ring: 145 90% 50%; /* Adjusted Green Ring */
-    --radius: 8px;
-    --radius-lg: 24px;
+    /* Define a consistent dark theme */
+    --background: 210 15% 12%; /* Dark blue-grey */
+    --foreground: 210 20% 95%; /* Light grey text */
 
-     /* Dark Chart Colors */
-    --chart-1: 187 70% 45%;
-    --chart-2: 207 70% 40%;
-    --chart-3: 17 90% 65%;
+    --card: 210 15% 18%; /* Darker card background */
+    --card-foreground: 210 20% 95%; /* Light grey text */
+
+    --popover: 210 15% 15%; /* Dark popover */
+    --popover-foreground: 210 20% 95%; /* Light grey text */
+
+    --primary: 195 53% 55%; /* Lighter Steel Blue for dark mode */
+    --primary-foreground: 210 15% 10%; /* Dark text on primary */
+
+    --secondary: 210 15% 25%; /* Dark secondary bg */
+    --secondary-foreground: 210 20% 85%; /* Lighter secondary text */
+
+    --muted: 210 15% 25%; /* Dark muted bg */
+    --muted-foreground: 210 10% 55%; /* Medium-dark grey text */
+
+    --accent: 30 90% 60%; /* Slightly brighter orange */
+    --accent-foreground: 210 15% 10%; /* Dark text on accent */
+
+    --destructive: 0 65% 55%; /* Dark mode red */
+    --destructive-foreground: 0 0% 98%; /* Light text on destructive */
+
+    --border: 210 10% 30%; /* Darker border */
+    --input: 210 15% 22%; /* Darker input bg */
+    --ring: 195 53% 65%; /* Lighter ring for dark mode */
+
+    --radius: 0.5rem;
+    --radius-lg: 1rem;
+
+    /* Dark Chart Colors */
+    --chart-1: 195 70% 60%;
+    --chart-2: 30 80% 65%;
+    --chart-3: 120 60% 55%;
     --chart-4: 210 10% 70%;
-    --chart-5: 170 60% 50%;
+    --chart-5: 280 70% 65%;
 
-     /* Dark Sidebar colors */
-    --sidebar-background: var(--primary);
-    --sidebar-foreground: var(--primary-foreground);
+    /* Dark Sidebar colors */
+    --sidebar-background: var(--card);
+    --sidebar-foreground: var(--card-foreground);
     --sidebar-primary: var(--primary);
     --sidebar-primary-foreground: var(--primary-foreground);
     --sidebar-accent: var(--accent);
@@ -114,9 +114,9 @@
     @apply border-border;
   }
   body {
-    /* Apply the main background color directly */
+    /* Apply the main background and text color directly */
     @apply bg-background text-foreground;
-    /* Use Cairo font if available, fallback to sans-serif */
+    /* Use Cairo font */
     font-family: 'Cairo', sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }

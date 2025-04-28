@@ -142,6 +142,7 @@ export default function RechargePage() {
     toast({
       title: "بدء عملية الشحن",
       description: `جاري شحن ${pkg.name} للرقم ${phoneNumber}...`,
+      variant: 'default',
     });
 
     setTimeout(() => {
@@ -152,7 +153,7 @@ export default function RechargePage() {
          toast({
             title: "نجاح العملية",
             description: `تم شحن ${pkg.name} بنجاح للرقم ${phoneNumber}!`,
-            variant: "default", // Use primary color style
+            variant: "default", // Use primary color style for success
         });
       } else {
          toast({
@@ -166,9 +167,9 @@ export default function RechargePage() {
 
 
   return (
-     // Use bg-background (emerald green)
+     // Use bg-background
     <div className="flex min-h-screen flex-col bg-background text-foreground">
-      {/* Header - Primary (darker green), White text */}
+      {/* Header - Primary background, Primary Foreground text */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-primary px-4 py-2 text-primary-foreground shadow-md">
          {/* Back button to /services */}
         <Link href="/services" passHref>
@@ -177,24 +178,24 @@ export default function RechargePage() {
             <span className="sr-only">رجوع</span>
           </Button>
         </Link>
-         {/* Title - White Text */}
-        <h1 className="text-lg font-medium">التعبئة</h1> {/* Adjusted font weight */}
-        <div className="w-10"></div> {/* Placeholder */}
+         {/* Title - Primary Foreground Text */}
+        <h1 className="text-lg font-medium">التعبئة</h1>
+        <div className="w-10"></div> {/* Placeholder to balance */}
       </header>
 
       {/* Main Content Area */}
        <main className="flex-1 space-y-4 p-4 pt-6 md:p-6 md:pt-8"> {/* Padding: 16px */}
          {/* Phone Number Input Container */}
          <div className="relative flex items-center">
-            {/* Input field: White bg, rounded 8px, shadow */}
+            {/* Input field: Card bg, rounded, shadow */}
             <Input
               type="tel"
               placeholder="أدخل رقم الهاتف أو الأرضي"
               value={phoneNumber}
               onChange={handleInputChange}
-              // Apply specified styling: h-12, rounded-md (8px), shadow-sm, text-lg
+              // Apply specified styling: h-12, rounded-md (0.5rem), shadow-sm, text-lg
                className={cn(
-                 "h-12 w-full rounded-[var(--radius)] border border-border bg-card py-3 pl-4 pr-12 text-lg shadow-sm placeholder-muted-foreground focus:border-primary focus:ring-1 focus:ring-ring", // pr-12 for logo space
+                 "h-12 w-full rounded-[var(--radius)] border border-border bg-card py-3 pl-4 pr-12 text-lg shadow-sm placeholder-muted-foreground focus:border-primary focus:ring-1 focus:ring-ring text-foreground", // pr-12 for logo space
                  "text-right" // Align text to the right for RTL numbers
               )}
               maxLength={15}
@@ -212,15 +213,15 @@ export default function RechargePage() {
          {/* Operator/Error Message */}
          {/* Show error if number entered but no operator detected */}
          {phoneNumber.length >= 2 && !detectedOperator && (
-          <p className="text-center text-sm text-destructive">المشغل غير مدعوم حالياً.</p> // Red text for error
+          <p className="text-center text-sm text-destructive">المشغل غير مدعوم حالياً.</p> // Use destructive color for error
         )}
 
         {/* Package List Section */}
          {showPackages && detectedOperator && (
            <div className="mt-4">
-              {/* Title for packages - Dark Gray */}
-              <h2 className="mb-3 text-center text-base font-semibold text-white"> {/* White text on green background */}
-                 <Package className="inline-block h-5 w-5 mr-2 align-middle text-white"/>
+              {/* Title for packages - Use foreground color */}
+              <h2 className="mb-3 text-center text-base font-semibold text-foreground">
+                 <Package className="inline-block h-5 w-5 mr-2 align-middle text-foreground"/>
                  باقات {detectedOperator} المتاحة
              </h2>
              {/* Scrollable area for packages */}
@@ -232,16 +233,16 @@ export default function RechargePage() {
                  ) : (packagesData[detectedOperator] || []).length > 0 ? (
                      <div className="space-y-2"> {/* space-y-2 for 8px margin */}
                         {packagesData[detectedOperator]?.map((pkg) => (
-                            // Package Card: White bg, rounded-xl (12px), shadow-md
+                            // Package Card: Card bg, rounded-xl, shadow-md
                            <Card key={pkg.id} className="overflow-hidden rounded-xl bg-card p-3 shadow-md transition-transform duration-150 ease-in-out active:scale-[0.98] active:shadow-sm"> {/* rounded-xl, p-3 */}
                               <div className="flex items-center justify-between gap-3">
                                   {/* Package details */}
                                   <div className="flex-1 space-y-1 text-right"> {/* Text align right */}
-                                       {/* Package Name: Dark Gray, Bold */}
+                                       {/* Package Name: Card Foreground, Bold */}
                                        <p className="text-base font-semibold text-card-foreground">{pkg.name}</p>
-                                       {/* Description: Medium Gray */}
+                                       {/* Description: Muted Foreground */}
                                        {pkg.description && <p className="text-xs text-muted-foreground">{pkg.description}</p>}
-                                      {/* Price: Primary Color (Dark Green) */}
+                                      {/* Price: Primary Color */}
                                       <p className="text-sm font-medium text-primary flex items-center justify-end gap-1 pt-1"> {/* Justify end */}
                                           <CircleDollarSign className="h-4 w-4" />
                                            {typeof pkg.price === 'number' && pkg.price > 0
@@ -249,12 +250,11 @@ export default function RechargePage() {
                                              : pkg.price}
                                       </p>
                                   </div>
-                                   {/* Recharge Button: Orange bg, White text, rounded 8px */}
+                                   {/* Recharge Button: Accent bg, Accent foreground text, rounded */}
                                    <Button
                                      size="sm"
-                                     variant="default"
-                                      // Use orange color directly, white text, rounded 8px
-                                      className="bg-[#FF6F3C] px-4 py-1.5 text-sm font-medium text-white shadow-sm hover:bg-orange-500 active:bg-orange-600 h-auto rounded-[var(--radius)] transition-all"
+                                     variant="accent" // Use accent variant
+                                     className="px-4 py-1.5 text-sm font-medium shadow-sm h-auto rounded-[var(--radius)] transition-all"
                                       onClick={() => handleRechargeClick(pkg)}
                                       disabled={isLoading && activeButtonId === pkg.id}
                                   >
@@ -269,7 +269,7 @@ export default function RechargePage() {
                         ))}
                      </div>
                  ) : (
-                     // No packages message: Medium Gray
+                     // No packages message: Muted Foreground
                      <p className="p-6 text-center text-muted-foreground">لا توجد باقات متاحة حالياً لهذا المشغل.</p>
                  )}
                </ScrollArea>
