@@ -8,7 +8,7 @@ export default {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    container: { // Added container configuration
+    container: { // Keep container configuration
       center: true,
       padding: "2rem",
       screens: {
@@ -17,6 +17,7 @@ export default {
     },
   	extend: {
   		colors: {
+        // Use CSS variables defined in globals.css
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -50,7 +51,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: {
+        sidebar: { // Keep sidebar colors if needed
           DEFAULT: 'hsl(var(--sidebar-background))',
           foreground: 'hsl(var(--sidebar-foreground))',
           primary: 'hsl(var(--sidebar-primary))',
@@ -61,15 +62,18 @@ export default {
           ring: 'hsl(var(--sidebar-ring))'
         }
   		},
-  		borderRadius: {
+  		borderRadius: { // Keep border radius consistent
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+        xl: 'calc(var(--radius) + 4px)', // Add xl for larger rounding
+        '2xl': 'calc(var(--radius) + 8px)', // Add 2xl
+        '3xl': 'calc(var(--radius) + 16px)', // Add 3xl
   		},
-      fontFamily: { // Added Inter font
+      fontFamily: { // Keep Inter font
         sans: ["var(--font-inter)", "sans-serif"],
       },
-  		keyframes: {
+  		keyframes: { // Keep existing keyframes
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -79,7 +83,7 @@ export default {
           to: { height: "0" },
         },
   		},
-  		animation: {
+  		animation: { // Keep existing animations
   			"accordion-down": "accordion-down 0.2s ease-out",
   			"accordion-up": "accordion-up 0.2s ease-out",
   		}

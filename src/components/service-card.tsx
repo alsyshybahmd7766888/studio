@@ -18,25 +18,25 @@ export function ServiceCard({ icon: Icon, iconText, buttonText, onClick, classNa
   return (
     <Card
       className={cn(
-        "overflow-hidden rounded-xl bg-card text-card-foreground shadow-md transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-0.5 active:shadow-inner active:translate-y-0", // Subtle hover/active effects
+        "overflow-hidden rounded-2xl bg-card text-card-foreground shadow-lg transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 active:shadow-md active:translate-y-0", // Enhanced rounding, shadow, and hover effects
         className
       )}
       onClick={onClick} // Make the whole card clickable
     >
-      <CardContent className="flex cursor-pointer flex-col items-center justify-center p-4 text-center">
-        {/* Icon Circle */}
-        <div className="mb-4 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+      <CardContent className="flex cursor-pointer flex-col items-center justify-center p-5 text-center"> {/* Increased padding */}
+        {/* Icon Circle - Updated Style */}
+        <div className="mb-4 flex h-[64px] w-[64px] items-center justify-center rounded-full bg-gradient-to-br from-secondary via-secondary/80 to-secondary text-secondary-foreground shadow-md"> {/* Slightly larger, gradient bg, shadow */}
           {Icon ? (
-            <Icon className="h-6 w-6" /> // Render icon if provided
+            <Icon className="h-7 w-7" /> // Render icon if provided, slightly larger
           ) : (
-            <span className="text-sm font-medium">{iconText}</span> // Fallback text
+            <span className="text-sm font-semibold">{iconText}</span> // Fallback text, added font-semibold
           )}
         </div>
 
-        {/* Title Button */}
+        {/* Title Button - Updated Style */}
         <Button
           variant="default"
-          className="h-auto rounded-lg bg-primary px-3 py-1.5 text-center text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary/90 active:bg-accent active:text-accent-foreground" // Adjusted hover/active colors
+          className="h-auto rounded-lg bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md active:bg-accent active:text-accent-foreground active:shadow-inner" // Adjusted padding, hover/active effects
           // Removed onClick from Button, handled by Card onClick
         >
           {buttonText}
