@@ -43,19 +43,19 @@ export default function Home() {
         <div className="flex flex-col items-center">
           <div className="flex items-center gap-1">
             <Wallet className="h-5 w-5" />
-            <span className="text-lg font-semibold">رصيدي: 11</span>
+            <span className="text-lg font-semibold">رصيدي: 0</span> {/* Updated balance to 0 */}
           </div>
         </div>
 
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <div className="text-sm font-semibold">صهيب أحمد</div>
-            <div className="text-xs opacity-80">12130</div>
+            <div className="text-sm font-semibold">اسم حساب المستخدم</div> {/* Updated username */}
+            {/* Account number removed */}
           </div>
           <Avatar className="h-10 w-10 border-2 border-white">
             {/* Placeholder image - replace with actual user image */}
-            <AvatarImage src="https://picsum.photos/40/40?grayscale" alt="صهيب أحمد" />
-            <AvatarFallback>صأ</AvatarFallback>
+            <AvatarImage src="https://picsum.photos/40/40?grayscale" alt="اسم حساب المستخدم" />
+            <AvatarFallback>أح</AvatarFallback> {/* Fallback initials can be updated */}
           </Avatar>
         </div>
       </header>
