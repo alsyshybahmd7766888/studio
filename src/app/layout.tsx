@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/toaster"; // Import Toaster
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Easy Recharge',
-  description: 'تطبيق تعبئة رصيد وباقات وشدات ببجي | Recharge mobile credit, packages, and PUBG UC easily.',
+  title: '4Now فورناو',
+  description: 'فورناو… لا وقت للانتظار! | تطبيق خدمات دفع وتحويل وإدارة.',
 };
 
 export default function RootLayout({

@@ -4,31 +4,33 @@
 
 @layer base {
   :root {
-    --background: 210 17% 95%; /* Light Gray */
-    --foreground: 210 10% 23%; /* Darker Gray for better contrast */
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 210 10% 23%;
+    --background: 145 63% 49%; /* Bright Green - Main BG */
+    --foreground: 210 10% 15%; /* Blackish - Subtext */
+    --card: 0 0% 100%; /* White - Card BG */
+    --card-foreground: 210 10% 15%; /* Blackish - Card Text */
     --popover: 0 0% 100%;
-    --popover-foreground: 210 10% 23%;
-    --primary: 205 70% 51%; /* Vibrant Blue */
-    --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 210 17% 90%; /* Slightly darker gray for secondary elements */
-    --secondary-foreground: 210 10% 23%;
-    --muted: 210 17% 90%;
-    --muted-foreground: 210 10% 45%;
-    --accent: 145 63% 49%; /* Green */
+    --popover-foreground: 210 10% 15%;
+    --primary: 145 63% 49%; /* Bright Green */
+    --primary-foreground: 0 0% 100%; /* White - Heading Text */
+    --secondary: 30 90% 55%; /* Orange */
+    --secondary-foreground: 0 0% 100%; /* White */
+    --muted: 210 17% 90%; /* Light Gray */
+    --muted-foreground: 210 10% 45%; /* Darker Gray */
+    --accent: 30 90% 55%; /* Orange - Explicit Accent */
     --accent-foreground: 0 0% 100%; /* White */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 210 17% 85%; /* Adjusted border color */
-    --input: 210 17% 88%; /* Adjusted input background */
-    --ring: 205 70% 51%; /* Blue for focus rings */
+    --border: 145 63% 70%; /* Lighter Green border */
+    --input: 145 63% 95%; /* Very Light Green input BG */
+    --ring: 30 90% 55%; /* Orange for focus rings */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
+    --dark-green: 145 70% 30%; /* Custom dark green for logo */
+    /* Sidebar colors (keep defaults or adjust as needed) */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -40,31 +42,33 @@
   }
 
   .dark {
-    /* Keeping dark mode defaults for now, can be adjusted later if needed */
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    /* TODO: Adjust dark mode colors for the 4Now theme if needed */
+    --background: 145 63% 10%; /* Dark Green */
+    --foreground: 0 0% 98%; /* White/Light Gray */
+    --card: 145 50% 15%; /* Darker Green/Gray */
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 145 50% 15%;
     --popover-foreground: 0 0% 98%;
-    --primary: 205 70% 51%; /* Vibrant Blue */
+    --primary: 145 63% 49%; /* Keep Bright Green */
     --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
+    --secondary: 30 90% 55%; /* Keep Orange */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 145 30% 25%; /* Dark Muted Green/Gray */
     --muted-foreground: 0 0% 63.9%;
-    --accent: 145 63% 49%; /* Green */
-    --accent-foreground: 0 0% 100%; /* White */
+    --accent: 30 90% 55%; /* Keep Orange */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 205 70% 51%; /* Blue for focus rings */
+    --border: 145 63% 30%; /* Darker Green Border */
+    --input: 145 40% 20%; /* Dark Input BG */
+    --ring: 30 90% 55%; /* Keep Orange Ring */
     --chart-1: 220 70% 50%;
     --chart-2: 160 60% 45%;
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --dark-green: 145 70% 60%; /* Adjust dark green for dark mode */
+    /* Sidebar colors (dark mode) */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
