@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // Game data based on the user's list
 const gamesData = [
-  { name: 'شدات ببجي', link: '#' }, // Keep link '#' for now, specific page TBD
+  { name: 'شدات ببجي', link: '/services/games/pubg' }, // Updated link
   { name: 'بوبجي نيوستيت', link: '#' },
   { name: 'فري فاير', link: '#' },
   { name: 'كلاش اوف كلانس', link: '#' }, // Corrected name
