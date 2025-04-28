@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -6,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, RefreshCw } from 'lucide-react'; // Use ArrowRight for RTL back
 import { Button } from '@/components/ui/button';
-import { ServiceCard } from '@/components/service-card'; // Reuse ServiceCard for consistent styling
+import { ServiceCard } from '@/components/service-card'; // Ensure this uses the new theme
 import { useToast } from "@/hooks/use-toast";
 
 // Program/App services data based on the user's list
@@ -27,7 +26,6 @@ const programServicesData = [
   { name: 'اوهلا شات', link: '#' },
   { name: 'لما شات', link: '#' },
   { name: 'SUGO - سوجو', link: '#' }, // Combined 'SUGO - سوجو' and 'سوجو - SUGO'
-  // Add more services as needed
 ];
 
 
@@ -41,9 +39,8 @@ export default function ProgramsPage() {
         toast({
             title: "تحديث",
             description: "تم تحديث قائمة خدمات البرامج والتطبيقات.",
-            variant: 'default',
+            variant: 'default', // Uses primary color
         });
-        // Add actual refresh logic here if needed
     };
 
    const handleServiceClick = (service: typeof programServicesData[0]) => {
@@ -65,9 +62,8 @@ export default function ProgramsPage() {
                 variant: 'default', // Use default/info style
              });
              console.log(`No specific page defined or feature not ready for ${service.name}`);
-             setActiveService(null); // Reset active state if not navigating
+             setActiveService(null);
           }
-          // Reset active state slightly after interaction completes, unless navigating away
            if (!service.link || service.link === '#') {
                 setTimeout(() => setActiveService(null), 300);
            }
@@ -76,30 +72,34 @@ export default function ProgramsPage() {
 
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
+    // Use bg-background (emerald green)
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      {/* Header - Primary (dark green), White text */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-primary px-4 py-2 text-primary-foreground shadow-md">
-        <Link href="/" passHref>
+         {/* Back button to /services */}
+        <Link href="/services" passHref>
           <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/80">
-            <ArrowRight className="h-5 w-5" /> {/* RTL back */}
+            <ArrowRight className="h-5 w-5" />
             <span className="sr-only">رجوع</span>
           </Button>
         </Link>
-        <h1 className="text-lg font-semibold">البرامج</h1>
-         <Button variant="ghost" size="icon" className="text-accent hover:bg-primary/80" onClick={handleRefresh}>
+        <h1 className="text-lg font-medium">البرامج</h1> {/* White text, medium weight */}
+         {/* Refresh button - Orange icon */}
+         <Button variant="ghost" size="icon" className="text-orange-500 hover:bg-primary/80" onClick={handleRefresh}> {/* Direct orange */}
             <RefreshCw className="h-5 w-5" />
             <span className="sr-only">تحديث</span>
         </Button>
       </header>
 
       {/* Main Content Area - Program Services Grid */}
+      {/* Padding, background inherited */}
       <main className="flex-1 p-4 pt-6 md:p-6 md:pt-8">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"> {/* gap-3 for 12px */}
           {programServicesData.map((service, index) => (
             <ServiceCard
               key={index}
-              // Use service name or parts of it for the icon circle text
-              iconText={service.name.split(' ')[0]} // Take first word or abbreviation
+               // Use service name or parts of it for the icon circle text
+              iconText={service.name.split(' ')[0]} // Use first word
               buttonText={service.name}
               onClick={() => handleServiceClick(service)}
               isActive={activeService === service.name}
@@ -110,4 +110,3 @@ export default function ProgramsPage() {
     </div>
   );
 }
-

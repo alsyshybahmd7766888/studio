@@ -62,17 +62,19 @@ export default {
           ring: 'hsl(var(--sidebar-ring))'
         }
   		},
-  		borderRadius: { // Keep border radius consistent, use var(--radius)
-  			lg: 'var(--radius)', // 12px (0.75rem)
-  			md: 'calc(var(--radius) - 4px)', // 8px (0.5rem)
-  			sm: 'calc(var(--radius) - 6px)', // 6px (0.375rem)
-        xl: 'calc(var(--radius) + 4px)', // 16px (1rem)
-        '2xl': 'calc(var(--radius) + 8px)', // 20px (1.25rem) - Adjusted for consistency
-        // Add specific values if needed, e.g., for buttons
-        button: '8px', // Explicitly set button radius if needed elsewhere
+  		borderRadius: {
+        // Use the new CSS variables for radius
+        DEFAULT: 'var(--radius)', // Default uses the base radius (8px)
+  			lg: 'var(--radius-lg)', // Large radius (24px)
+  			md: 'calc(var(--radius) - 2px)', // Medium (6px) - adjust if needed
+  			sm: 'calc(var(--radius) - 4px)', // Small (4px) - adjust if needed
+        xl: 'calc(var(--radius-lg) - 8px)', // Example: 16px
+        '2xl': 'var(--radius-lg)', // Example: Use large radius for 2xl
+        button: 'var(--radius)', // Ensure buttons use the base radius
   		},
-      fontFamily: { // Keep Inter font
-        sans: ["var(--font-inter)", "sans-serif"],
+      fontFamily: {
+        // Use Cairo font defined in globals.css
+        sans: ["Cairo", "sans-serif"],
       },
   		keyframes: { // Keep existing keyframes
         "accordion-down": {

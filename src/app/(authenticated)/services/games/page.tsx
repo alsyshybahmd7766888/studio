@@ -1,17 +1,16 @@
-
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Gamepad2, RefreshCw } from 'lucide-react'; // Use ArrowRight for RTL back
+import { ArrowRight, RefreshCw } from 'lucide-react'; // Use ArrowRight for RTL back
 import { Button } from '@/components/ui/button';
-import { ServiceCard } from '@/components/service-card'; // Reuse ServiceCard for consistent styling
+import { ServiceCard } from '@/components/service-card'; // Ensure this uses the new theme
 import { useToast } from "@/hooks/use-toast";
 
 // Game data based on the user's list
 const gamesData = [
-  { name: 'شدات ببجي', link: '/recharge/pubg' }, // Specific link for PUBG UC
+  { name: 'شدات ببجي', link: '#' }, // Keep link '#' for now, specific page TBD
   { name: 'بوبجي نيوستيت', link: '#' },
   { name: 'فري فاير', link: '#' },
   { name: 'كلاش اوف كلانس', link: '#' },
@@ -29,7 +28,7 @@ const gamesData = [
   { name: 'BoBo Live - بوبو لايف', link: '#' },
   { name: 'IMO Live - ايمو لايف', link: '#' },
   { name: 'YoHo Chat - شات يوهو', link: '#' },
-  { name: 'Bella Chat Coins - بيلا شات', link: '#' },
+  { name: 'Bella Chat Coins - بيلا شات', link: '#' }, // Merged 'Bella Chat بيلا شات كوين'
   { name: 'Mico Live - ميكو لايف', link: '#' },
   { name: 'هاي داي جواهر', link: '#' },
   { name: 'هاي داي عملة ذهبية', link: '#' },
@@ -39,7 +38,6 @@ const gamesData = [
   { name: 'بارتي ستار', link: '#' },
   { name: 'عصر الاساطير', link: '#' },
   { name: 'فيفا موبايل', link: '#' }, // Merged '#العاب # فيفا موبال'
-  // Add more games as needed
 ];
 
 
@@ -53,9 +51,8 @@ export default function GamesPage() {
         toast({
             title: "تحديث",
             description: "تم تحديث قائمة الألعاب.",
-            variant: 'default',
+            variant: 'default', // Uses primary color
         });
-        // Add actual refresh logic here if needed
     };
 
    const handleGameClick = (game: typeof gamesData[0]) => {
@@ -77,9 +74,8 @@ export default function GamesPage() {
                 variant: 'default', // Use default/info style
              });
              console.log(`No specific page defined or feature not ready for ${game.name}`);
-             setActiveGame(null); // Reset active state if not navigating
+             setActiveGame(null);
           }
-          // Reset active state slightly after interaction completes, unless navigating away
            if (!game.link || game.link === '#') {
                 setTimeout(() => setActiveGame(null), 300);
            }
@@ -88,30 +84,34 @@ export default function GamesPage() {
 
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
-      {/* Header */}
+    // Use bg-background (emerald green)
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      {/* Header - Primary (dark green), White text */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-primary px-4 py-2 text-primary-foreground shadow-md">
-        <Link href="/" passHref>
+         {/* Back button to /services */}
+        <Link href="/services" passHref>
           <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/80">
-            <ArrowRight className="h-5 w-5" /> {/* RTL back */}
+            <ArrowRight className="h-5 w-5" />
             <span className="sr-only">رجوع</span>
           </Button>
         </Link>
-        <h1 className="text-lg font-semibold">معرض الألعاب</h1>
-         <Button variant="ghost" size="icon" className="text-accent hover:bg-primary/80" onClick={handleRefresh}>
+        <h1 className="text-lg font-medium">معرض الألعاب</h1> {/* White text, medium weight */}
+         {/* Refresh button - Orange icon */}
+         <Button variant="ghost" size="icon" className="text-orange-500 hover:bg-primary/80" onClick={handleRefresh}> {/* Direct orange */}
             <RefreshCw className="h-5 w-5" />
             <span className="sr-only">تحديث</span>
         </Button>
       </header>
 
       {/* Main Content Area - Games Grid */}
+      {/* Padding, background inherited */}
       <main className="flex-1 p-4 pt-6 md:p-6 md:pt-8">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"> {/* gap-3 for 12px */}
           {gamesData.map((game, index) => (
             <ServiceCard
               key={index}
-              // Use game name in the icon circle for simplicity, could be icons later
-              iconText={game.name.split(' ')[0]} // Take first word for brevity in circle
+              // Use game name in the icon circle text
+              iconText={game.name.split(' ')[0]} // Use first word
               buttonText={game.name}
               onClick={() => handleGameClick(game)}
               isActive={activeGame === game.name}
