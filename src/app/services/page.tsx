@@ -1,13 +1,16 @@
 'use client';
 
 import * as React from 'react';
-import Link from 'next/link'; // Import Link for navigation
-import { ArrowRight, RefreshCw } from 'lucide-react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
+import { ArrowRight, RefreshCw, Smartphone } from 'lucide-react'; // Add Smartphone icon
 import { Button } from '@/components/ui/button';
-import { ServiceCard } from '@/components/service-card'; // Import the new component
-import { useToast } from "@/hooks/use-toast"; // Import useToast
+import { ServiceCard } from '@/components/service-card';
+import { useToast } from "@/hooks/use-toast";
 
+// Updated services data including "كبيبة السداد"
 const servicesData = [
+  { iconText: 'السداد', icon: Smartphone, buttonText: 'كبيبة السداد', href: '/recharge' }, // Added كبيبة السداد
   { iconText: 'التحويل', buttonText: 'تحويل لحساب عميل' },
   { iconText: 'MTN', buttonText: 'باقات MTN' },
   { iconText: 'سبافون', buttonText: 'باقات سبافون' },
@@ -20,41 +23,46 @@ const servicesData = [
 
 export default function ServicesPage() {
     const { toast } = useToast();
+    const router = useRouter(); // Initialize router
 
     const handleRefresh = () => {
-        // Simulate refreshing data or performing an action
         console.log('Refreshing services...');
         toast({
             title: "تحديث",
             description: "تم تحديث قائمة الخدمات.",
+            variant: 'default', // Use default style
         });
         // Add actual refresh logic here if needed
     };
 
-    const handleServiceClick = (serviceName: string) => {
-      // Placeholder action for clicking a service
-      console.log(`Navigating to ${serviceName}...`);
+    const handleServiceClick = (service: typeof servicesData[0]) => {
+      console.log(`Handling click for ${service.buttonText}...`);
       toast({
         title: "تم التحديد",
-        description: `جارٍ الانتقال إلى خدمة ${serviceName}`,
+        description: `جارٍ الانتقال إلى خدمة ${service.buttonText}`,
+        variant: 'default', // Use default style
       });
-      // In a real app, you would navigate to the specific service page here
-      // e.g., router.push(`/services/${serviceName.toLowerCase().replace(/\s+/g, '-')}`);
-    };
 
+      if (service.href) {
+        router.push(service.href); // Navigate if href is provided
+      } else {
+        // Handle other services without a specific page yet (optional)
+        console.log(`No specific page defined for ${service.buttonText}`);
+      }
+    };
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-primary px-4 py-2 text-primary-foreground shadow-md">
         <Link href="/" passHref>
-            <Button variant="ghost" size="icon" className="text-primary-foreground">
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/80"> {/* Ensure hover matches theme */}
             <ArrowRight className="h-5 w-5" />
             <span className="sr-only">رجوع</span>
             </Button>
         </Link>
         <h1 className="text-lg font-semibold">الخدمات</h1>
-        <Button variant="ghost" size="icon" className="text-accent" onClick={handleRefresh}>
+        <Button variant="ghost" size="icon" className="text-accent hover:bg-primary/80" onClick={handleRefresh}> {/* Use accent color, adjust hover */}
           <RefreshCw className="h-5 w-5" />
           <span className="sr-only">تحديث</span>
         </Button>
@@ -62,23 +70,20 @@ export default function ServicesPage() {
 
       {/* Main Content Area - Services Grid */}
       <main className="flex-1 p-4 pt-6">
-        <div className="grid grid-cols-2 gap-3"> {/* Using gap-3 for ~12px spacing */}
+        <div className="grid grid-cols-2 gap-3"> {/* gap-3 for ~12px */}
           {servicesData.map((service, index) => (
             <ServiceCard
               key={index}
+              icon={service.icon} // Pass icon component if available
               iconText={service.iconText}
               buttonText={service.buttonText}
-              onClick={() => handleServiceClick(service.buttonText)}
+              onClick={() => handleServiceClick(service)} // Pass the whole service object
             />
           ))}
         </div>
       </main>
 
-      {/* Bottom Navigation Placeholder (optional - keep consistent with home) */}
-      {/* You might want a simplified or no nav bar on sub-pages */}
-       {/* <nav className="fixed bottom-0 left-0 right-0 z-40 flex h-16 items-center justify-around rounded-t-2xl border-t bg-card shadow-[0_-4px_10px_-5px_rgba(0,0,0,0.1)]"> */}
-        {/* Navigation items */}
-       {/* </nav> */}
+      {/* No bottom navigation on this page as requested */}
     </div>
   );
 }
