@@ -1,59 +1,92 @@
+
 'use client';
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowRight, Gamepad2, Star, Download } from 'lucide-react'; // Use ArrowRight for RTL back
+import { useRouter } from 'next/navigation';
+import { ArrowRight, Gamepad2, RefreshCw } from 'lucide-react'; // Use ArrowRight for RTL back
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import Image from 'next/image';
+import { ServiceCard } from '@/components/service-card'; // Reuse ServiceCard for consistent styling
+import { useToast } from "@/hooks/use-toast";
 
-// Sample game data (replace with actual data/API)
+// Game data based on the user's list
 const gamesData = [
-  {
-    id: 'game1',
-    name: 'PUBG Mobile',
-    description: 'اشحن شدات ببجي موبايل بأفضل الأسعار.',
-    imageUrl: 'https://picsum.photos/seed/pubg/300/150', // Placeholder image
-    rating: 4.5,
-    category: 'شحن',
-    actionLabel: 'اشحن الآن',
-    actionLink: '/recharge/pubg', // Example link
-  },
-  {
-    id: 'game2',
-    name: 'Free Fire',
-    description: 'احصل على جواهر فري فاير فوراً.',
-    imageUrl: 'https://picsum.photos/seed/freefire/300/150', // Placeholder image
-    rating: 4.2,
-    category: 'شحن',
-    actionLabel: 'اشحن الآن',
-    actionLink: '#', // Placeholder
-  },
-   {
-    id: 'game3',
-    name: 'لعبة الأكشن XYZ',
-    description: 'لعبة مغامرات وقتال جديدة ومثيرة.',
-    imageUrl: 'https://picsum.photos/seed/actionxyz/300/150', // Placeholder image
-    rating: 4.8,
-    category: 'ألعاب',
-    actionLabel: 'تحميل',
-    actionLink: '#', // Placeholder
-  },
-   {
-    id: 'game4',
-    name: 'لعبة ألغاز العقل',
-    description: 'اختبر ذكاءك مع مئات الألغاز.',
-    imageUrl: 'https://picsum.photos/seed/puzzlebrain/300/150', // Placeholder image
-    rating: 4.6,
-    category: 'ألعاب',
-    actionLabel: 'العب الآن',
-    actionLink: '#', // Placeholder
-  },
+  { name: 'شدات ببجي', link: '/recharge/pubg' }, // Specific link for PUBG UC
+  { name: 'بوبجي نيوستيت', link: '#' },
+  { name: 'فري فاير', link: '#' },
+  { name: 'كلاش اوف كلانس', link: '#' },
+  { name: 'كلاش رويال', link: '#' },
+  { name: 'براول ستارز', link: '#' },
+  { name: 'كول اوف ديوتي موبايل', link: '#' },
+  { name: 'موبايل ليجند', link: '#' },
+  { name: 'لوردس موبايل', link: '#' },
+  { name: 'لعبة بوم بيتش', link: '#' },
+  { name: 'LIKEE - تطبيق لايكي', link: '#' },
+  { name: 'YoYo Coins - يويو كوينز', link: '#' },
+  { name: 'انتقام السلاطين', link: '#' },
+  { name: '8 Ball Pool - بلياردو', link: '#' },
+  { name: 'BIGO LIVE - بيجو لايف', link: '#' },
+  { name: 'BoBo Live - بوبو لايف', link: '#' },
+  { name: 'IMO Live - ايمو لايف', link: '#' },
+  { name: 'YoHo Chat - شات يوهو', link: '#' },
+  { name: 'Bella Chat Coins - بيلا شات', link: '#' },
+  { name: 'Mico Live - ميكو لايف', link: '#' },
+  { name: 'هاي داي جواهر', link: '#' },
+  { name: 'هاي داي عملة ذهبية', link: '#' },
+  { name: 'كرستال جنشن امباكت', link: '#' }, // Merged 'جنشن كرستال امباكت'
+  { name: 'جواكر ( عملة )', link: '#' },
+  { name: 'يلا لودو', link: '#' },
+  { name: 'بارتي ستار', link: '#' },
+  { name: 'عصر الاساطير', link: '#' },
+  { name: 'فيفا موبايل', link: '#' }, // Merged '#العاب # فيفا موبال'
   // Add more games as needed
 ];
 
+
 export default function GamesPage() {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [activeGame, setActiveGame] = React.useState<string | null>(null);
+
+   const handleRefresh = () => {
+        console.log('Refreshing games...');
+        toast({
+            title: "تحديث",
+            description: "تم تحديث قائمة الألعاب.",
+            variant: 'default',
+        });
+        // Add actual refresh logic here if needed
+    };
+
+   const handleGameClick = (game: typeof gamesData[0]) => {
+      console.log(`Handling click for ${game.name}...`);
+      setActiveGame(game.name);
+
+      setTimeout(() => {
+          if (game.link && game.link !== '#') {
+             toast({
+                title: "تم التحديد",
+                description: `جارٍ الانتقال إلى ${game.name}...`,
+                variant: 'default',
+             });
+            router.push(game.link);
+          } else {
+             toast({
+                title: "غير متاح حالياً",
+                description: `خدمة ${game.name} غير متوفرة للشحن المباشر حالياً.`,
+                variant: 'default', // Use default/info style
+             });
+             console.log(`No specific page defined or feature not ready for ${game.name}`);
+             setActiveGame(null); // Reset active state if not navigating
+          }
+          // Reset active state slightly after interaction completes, unless navigating away
+           if (!game.link || game.link === '#') {
+                setTimeout(() => setActiveGame(null), 300);
+           }
+      }, 200);
+    };
+
+
   return (
     <div className="flex min-h-screen flex-col bg-background">
       {/* Header */}
@@ -65,52 +98,26 @@ export default function GamesPage() {
           </Button>
         </Link>
         <h1 className="text-lg font-semibold">معرض الألعاب</h1>
-        <div className="w-10"></div> {/* Placeholder for balance */}
+         <Button variant="ghost" size="icon" className="text-accent hover:bg-primary/80" onClick={handleRefresh}>
+            <RefreshCw className="h-5 w-5" />
+            <span className="sr-only">تحديث</span>
+        </Button>
       </header>
 
-      {/* Main Content Area */}
+      {/* Main Content Area - Games Grid */}
       <main className="flex-1 p-4 pt-6 md:p-6 md:pt-8">
-        <ScrollArea className="h-[calc(100vh-150px)]"> {/* Adjust height as needed */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {gamesData.map((game) => (
-              <Card key={game.id} className="overflow-hidden rounded-xl bg-card shadow-md transition-all duration-200 hover:shadow-lg">
-                <CardHeader className="p-0">
-                  <Image
-                    src={game.imageUrl}
-                    alt={game.name}
-                    width={300}
-                    height={150}
-                    className="h-40 w-full object-cover" // Fixed height, object cover
-                  />
-                </CardHeader>
-                <CardContent className="p-4 space-y-2">
-                  <CardTitle className="text-base font-semibold text-foreground">{game.name}</CardTitle>
-                  <p className="text-sm text-muted-foreground">{game.description}</p>
-                  <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-secondary-foreground">{game.category}</span>
-                    <div className="flex items-center gap-1">
-                      <Star className="h-3 w-3 fill-accent text-accent" />
-                      <span>{game.rating}</span>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="p-4 pt-0">
-                  <Link href={game.actionLink || '#'} passHref className="w-full">
-                    <Button
-                      size="sm"
-                      variant="default"
-                      className="w-full bg-accent text-accent-foreground hover:bg-accent/90"
-                      disabled={!game.actionLink || game.actionLink === '#'} // Disable if no link
-                    >
-                      {game.actionLabel === 'اشحن الآن' ? <Gamepad2 className="mr-2 h-4 w-4" /> : <Download className="mr-2 h-4 w-4" />}
-                      {game.actionLabel}
-                    </Button>
-                  </Link>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        </ScrollArea>
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4">
+          {gamesData.map((game, index) => (
+            <ServiceCard
+              key={index}
+              // Use game name in the icon circle for simplicity, could be icons later
+              iconText={game.name.split(' ')[0]} // Take first word for brevity in circle
+              buttonText={game.name}
+              onClick={() => handleGameClick(game)}
+              isActive={activeGame === game.name}
+            />
+          ))}
+        </div>
       </main>
     </div>
   );

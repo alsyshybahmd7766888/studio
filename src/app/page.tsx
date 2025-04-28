@@ -9,7 +9,7 @@ import {
   Smartphone,
   Users, // Keep Users for now, map below uses Cog
   DollarSign,
-  CreditCard, // Keep CreditCard for now, map below uses custom icon
+  // Removed CreditCard import as SimCardIcon is used
   ShoppingCart,
   Gamepad2,
   Home as HomeIcon,
@@ -49,7 +49,7 @@ const homeServiceIcons = [
   { label: 'التحويل لحساب', icon: DollarSign, href: '#' },
   { label: 'الشرائح', icon: SimCardIcon, href: '#' }, // Use custom SimCard icon
   { label: 'البرامج', icon: ShoppingCart, href: '#' },
-  { label: 'معرض الألعاب', icon: Gamepad2, href: '/games' }, // Updated href
+  { label: 'معرض الألعاب', icon: Gamepad2, href: '/games' }, // Updated href to /games
 ];
 
 // Navigation items
