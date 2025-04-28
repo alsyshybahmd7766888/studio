@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -9,7 +10,6 @@ import {
   Smartphone,
   Users, // Keep Users for now, map below uses Cog
   DollarSign,
-  // Removed CreditCard import as SimCardIcon is used
   ShoppingCart,
   Gamepad2,
   Home as HomeIcon,
@@ -48,7 +48,7 @@ const homeServiceIcons = [
   { label: 'إدارة العملاء', icon: Cog, href: '#' }, // Use Cog icon
   { label: 'التحويل لحساب', icon: DollarSign, href: '#' },
   { label: 'الشرائح', icon: SimCardIcon, href: '/simcards' }, // Updated href to /simcards
-  { label: 'البرامج', icon: ShoppingCart, href: '#' },
+  { label: 'البرامج', icon: ShoppingCart, href: '/programs' }, // Updated href to /programs
   { label: 'معرض الألعاب', icon: Gamepad2, href: '/games' }, // Updated href to /games
 ];
 
@@ -177,3 +177,4 @@ export default function Home() {
     </div>
   );
 }
+
