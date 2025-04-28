@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -83,7 +82,7 @@ const dropdownMenuItems = [
   { label: 'عملياتي', icon: History, href: '#' },
   { label: 'تأميناتي', icon: Shield, href: '#' },
   { label: 'يومياتي', icon: BookOpen, href: '#' },
-  { label: 'الإعدادات', icon: Settings, href: '#' },
+  { label: 'الإعدادات', icon: Settings, href: '/settings' }, // Updated href
   { label: 'الملف الشخصي', icon: User, href: '#' },
   { label: 'الاشعارات', icon: Bell, href: '#' },
   { label: 'الشرائح', icon: SimCardIcon, href: '/services/simcards' },
@@ -108,11 +107,11 @@ export default function DashboardPage() {
           <DropdownMenuContent align="start" className="w-56 bg-card text-card-foreground">
             {/* Logo in Dropdown */}
             <DropdownMenuLabel className="flex items-center justify-center py-3">
-              <span className="text-xl font-bold">
+              <span className="text-3xl font-bold">
                 <span className="text-primary">٤</span>
                 <span className="text-accent">Now</span>
               </span>
-              <span className="ml-2 text-xl font-bold text-primary">فورناو</span>
+              {/* <span className="ml-2 text-xl font-bold text-primary">فورناو</span> */}
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-border/50"/>
 
