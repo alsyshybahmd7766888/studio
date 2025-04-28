@@ -8,7 +8,7 @@ export default {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    container: { // Keep container configuration
+    container: {
       center: true,
       padding: "2rem",
       screens: {
@@ -51,7 +51,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sidebar: { // Keep sidebar colors if needed
+        sidebar: { // Keep sidebar colors if needed, aligned with new theme
           DEFAULT: 'hsl(var(--sidebar-background))',
           foreground: 'hsl(var(--sidebar-foreground))',
           primary: 'hsl(var(--sidebar-primary))',
@@ -62,13 +62,14 @@ export default {
           ring: 'hsl(var(--sidebar-ring))'
         }
   		},
-  		borderRadius: { // Keep border radius consistent
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)',
-        xl: 'calc(var(--radius) + 4px)', // Add xl for larger rounding
-        '2xl': 'calc(var(--radius) + 8px)', // Add 2xl
-        '3xl': 'calc(var(--radius) + 16px)', // Add 3xl
+  		borderRadius: { // Keep border radius consistent, use var(--radius)
+  			lg: 'var(--radius)', // 12px (0.75rem)
+  			md: 'calc(var(--radius) - 4px)', // 8px (0.5rem)
+  			sm: 'calc(var(--radius) - 6px)', // 6px (0.375rem)
+        xl: 'calc(var(--radius) + 4px)', // 16px (1rem)
+        '2xl': 'calc(var(--radius) + 8px)', // 20px (1.25rem) - Adjusted for consistency
+        // Add specific values if needed, e.g., for buttons
+        button: '8px', // Explicitly set button radius if needed elsewhere
   		},
       fontFamily: { // Keep Inter font
         sans: ["var(--font-inter)", "sans-serif"],

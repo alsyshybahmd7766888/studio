@@ -6,8 +6,8 @@ import { Toaster } from "@/components/ui/toaster"; // Import Toaster
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 
 export const metadata: Metadata = {
-  title: 'Easy Recharge',
-  description: 'Your simple solution for mobile recharge, bundles, and PUBG UC.',
+  title: '4Now فورناو',
+  description: '4Now... لا وقت للانتظار! الحل السهل للشحن والباقات.',
 };
 
 export default function RootLayout({
@@ -17,6 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ar" dir="rtl"> {/* Set language to Arabic and direction to RTL */}
+      {/* Body will inherit bg-background from globals.css */}
       <body className={`${inter.variable} font-sans antialiased`}>
         {children}
         <Toaster /> {/* Add Toaster component here */}

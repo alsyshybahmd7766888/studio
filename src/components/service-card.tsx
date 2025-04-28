@@ -1,43 +1,48 @@
 'use client';
 
 import * as React from 'react';
-import type { LucideIcon } from 'lucide-react'; // Import LucideIcon type
+import type { LucideIcon } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface ServiceCardProps {
-  icon?: LucideIcon; // Optional icon component
-  iconText?: string; // Keep text as fallback or alternative
+  icon?: LucideIcon;
+  iconText?: string;
   buttonText: string;
   onClick?: () => void;
   className?: string;
+  isActive?: boolean; // To handle active state for button click
 }
 
-export function ServiceCard({ icon: Icon, iconText, buttonText, onClick, className }: ServiceCardProps) {
+export function ServiceCard({ icon: Icon, iconText, buttonText, onClick, className, isActive }: ServiceCardProps) {
   return (
     <Card
       className={cn(
-        "overflow-hidden rounded-2xl bg-card text-card-foreground shadow-lg transition-all duration-300 ease-in-out hover:shadow-xl hover:-translate-y-1 active:shadow-md active:translate-y-0", // Enhanced rounding, shadow, and hover effects
+        "overflow-hidden rounded-xl bg-card text-card-foreground shadow-md transition-all duration-200 ease-in-out hover:shadow-lg hover:-translate-y-1 active:shadow-sm active:translate-y-0", // White card, rounded-xl, subtle shadow & hover
         className
       )}
       onClick={onClick} // Make the whole card clickable
     >
-      <CardContent className="flex cursor-pointer flex-col items-center justify-center p-5 text-center"> {/* Increased padding */}
-        {/* Icon Circle - Updated Style */}
-        <div className="mb-4 flex h-[64px] w-[64px] items-center justify-center rounded-full bg-gradient-to-br from-secondary via-secondary/80 to-secondary text-secondary-foreground shadow-md"> {/* Slightly larger, gradient bg, shadow */}
+      <CardContent className="flex cursor-pointer flex-col items-center justify-center p-5 text-center">
+        {/* Icon Circle - Secondary background, white text/icon */}
+        <div className="mb-4 flex h-[60px] w-[60px] items-center justify-center rounded-full bg-secondary text-secondary-foreground shadow-sm"> {/* Dark Blue bg, White text */}
           {Icon ? (
-            <Icon className="h-7 w-7" /> // Render icon if provided, slightly larger
+            <Icon className="h-6 w-6" /> // Render icon if provided
           ) : (
-            <span className="text-sm font-semibold">{iconText}</span> // Fallback text, added font-semibold
+            <span className="text-sm font-semibold">{iconText}</span> // Fallback text
           )}
         </div>
 
-        {/* Title Button - Updated Style */}
+        {/* Title Button - Primary background, white text. Orange on active/click */}
         <Button
           variant="default"
-          className="h-auto rounded-lg bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground shadow-sm transition-all duration-200 hover:bg-primary/90 hover:shadow-md active:bg-accent active:text-accent-foreground active:shadow-inner" // Adjusted padding, hover/active effects
-          // Removed onClick from Button, handled by Card onClick
+          className={cn(
+            "h-auto rounded-lg px-3 py-1.5 text-center text-sm font-medium text-primary-foreground shadow-sm transition-colors duration-200", // base styles
+            isActive ? "bg-accent hover:bg-accent/90" : "bg-primary hover:bg-primary/90", // Teal default, Orange active
+             "active:bg-accent" // Always orange on active press
+          )}
+          // onClick logic is handled by the Card's onClick
         >
           {buttonText}
         </Button>

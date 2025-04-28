@@ -2,135 +2,124 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Phone, Wifi, CircleDollarSign, Package, Loader2 } from 'lucide-react'; // Using ArrowLeft for back, relevant icons
+import { ArrowRight, Phone, Wifi, CircleDollarSign, Package, Loader2 } from 'lucide-react'; // Use ArrowRight for RTL back
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ScrollArea } from '@/components/ui/scroll-area'; // For package list
-import Image from 'next/image'; // For operator logos
+import { ScrollArea } from '@/components/ui/scroll-area';
+import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
-import { cn } from '@/lib/utils'; // Import cn
+import { cn } from '@/lib/utils';
 
-// Operator detection logic and data
+// Updated operator prefixes based on requirement
 const operatorPrefixes: { [key: string]: string[] } = {
-  'Yemen Mobile': ['77', '78'],
-  'SabaFon': ['71'],
+  'يمن موبايل': ['77', '78'],
+  'سبأفون': ['71'],
   'YOU': ['73'],
-  'Y': ['70'],
-  'Landline': ['01', '02', '03', '04', '05', '06', '07', '08', '09'],
-  // ADSL uses the same prefixes as Landline
+  'واي': ['70'], // Explicitly name 'Y' as 'واي'
+  'الهاتف الأرضي': ['01', '02', '03', '04', '05', '06', '07', '08', '09'],
+  'ADSL': ['01', '02', '03', '04', '05', '06', '07', '08', '09'], // ADSL shares prefixes
 };
 
-// Ensure these logo paths exist in your public/logos folder
+// Operator logos (ensure these paths exist or use placeholders)
+// Assuming logos directory exists in public/logos/
 const operatorLogos: { [key: string]: string } = {
-  'Yemen Mobile': '/logos/yemen-mobile.png',
-  'SabaFon': '/logos/sabafon.png',
+  'يمن موبايل': '/logos/yemen-mobile.png',
+  'سبأفون': '/logos/sabafon.png',
   'YOU': '/logos/you.png',
-  'Y': '/logos/y.png',
-  'Landline': '/logos/landline.png', // Consider a generic telecom icon
-  'ADSL': '/logos/adsl.png', // Consider a generic wifi/internet icon
+  'واي': '/logos/y.png', // Assuming y.png exists
+  'الهاتف الأرضي': '/logos/landline.png', // Generic landline icon
+  'ADSL': '/logos/adsl.png', // Generic ADSL/wifi icon
 };
 
 // Placeholder package data (replace with actual API call or data source)
 interface PackageInfo {
     id: string;
     name: string;
-    price: number;
+    price: number | string; // Allow string for "حسب الفاتورة" etc.
     description?: string;
 }
 
-// Sample data - expanded slightly
+// Sample data using updated operator names
 const packagesData: { [key: string]: PackageInfo[] } = {
-  'Yemen Mobile': [
+  'يمن موبايل': [
     { id: 'ym1', name: 'باقة موبايلي الشهرية', price: 1500, description: '5GB بيانات + 150 دقيقة + 100 رسالة' },
     { id: 'ym2', name: 'باقة نت 2 جيجا', price: 700, description: '2GB بيانات صالحة لأسبوع' },
-    { id: 'ym3', name: 'باقة دقائق فقط', price: 500, description: '100 دقيقة لجميع الشبكات' },
-    { id: 'ym4', name: 'تعبئة رصيد مباشر', price: 0, description: 'أدخل مبلغ التعبئة' },
+    { id: 'ym3', name: 'تعبئة رصيد مباشر', price: 'حسب المبلغ', description: 'أدخل مبلغ التعبئة' },
   ],
-  'SabaFon': [
+  'سبأفون': [
     { id: 'sb1', name: 'باقة سبافون الذهبية', price: 2000, description: '10GB + دقائق ورسائل غير محدودة داخل الشبكة' },
-    { id: 'sb2', name: 'باقة سبافون الأسبوعية', price: 500, description: '1.5GB + 50 دقيقة' },
-     { id: 'sb3', name: 'تعبئة رصيد سبافون', price: 0, description: 'أدخل مبلغ التعبئة' },
+    { id: 'sb2', name: 'تعبئة رصيد سبافون', price: 'حسب المبلغ', description: 'أدخل مبلغ التعبئة' },
   ],
   'YOU': [
     { id: 'you1', name: 'باقة YOU نت الشهرية', price: 1800, description: '12GB انترنت سريع + سوشال ميديا' },
-    { id: 'you2', name: 'باقة YOU مكس', price: 900, description: '3GB + 100 دقيقة + 100 رسالة' },
-     { id: 'you3', name: 'تعبئة رصيد YOU', price: 0, description: 'أدخل مبلغ التعبئة' },
+     { id: 'you3', name: 'تعبئة رصيد YOU', price: 'حسب المبلغ', description: 'أدخل مبلغ التعبئة' },
   ],
-   'Y': [
+   'واي': [
     { id: 'y1', name: 'باقة واي شباب الأسبوعية', price: 600, description: '2GB بيانات ومكالمات داخل الشبكة' },
-    { id: 'y2', name: 'باقة واي أعمال الشهرية', price: 2500, description: '20GB + دقائق دولية مخفضة' },
-     { id: 'y3', name: 'تعبئة رصيد Y', price: 0, description: 'أدخل مبلغ التعبئة' },
+     { id: 'y3', name: 'تعبئة رصيد Y', price: 'حسب المبلغ', description: 'أدخل مبلغ التعبئة' },
   ],
-  'Landline': [
-    { id: 'll1', name: 'تسديد فاتورة الهاتف الثابت', price: 0, description: 'سيتم جلب مبلغ الفاتورة تلقائياً' }, // Example for bill payment
+  'الهاتف الأرضي': [
+    { id: 'll1', name: 'تسديد فاتورة الهاتف الثابت', price: 'حسب الفاتورة', description: 'سيتم جلب مبلغ الفاتورة تلقائياً' },
   ],
-    'ADSL': [
-    { id: 'adsl1', name: 'تجديد اشتراك ADSL الشهري', price: 0, description: 'سيتم جلب مبلغ التجديد تلقائياً' },
-    { id: 'adsl2', name: 'ترقية باقة ADSL', price: 1000, description: 'زيادة السرعة للشهر الحالي' },
+  'ADSL': [
+    { id: 'adsl1', name: 'تجديد اشتراك ADSL الشهري', price: 'حسب الفاتورة', description: 'سيتم جلب مبلغ التجديد تلقائياً' },
   ],
 };
+
 
 export default function RechargePage() {
   const [phoneNumber, setPhoneNumber] = React.useState('');
   const [detectedOperator, setDetectedOperator] = React.useState<string | null>(null);
   const [operatorLogo, setOperatorLogo] = React.useState<string | null>(null);
   const [showPackages, setShowPackages] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false); // For loading state on button
-  const [isFetchingPackages, setIsFetchingPackages] = React.useState(false); // For loading packages
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [isFetchingPackages, setIsFetchingPackages] = React.useState(false);
+  const [activeButtonId, setActiveButtonId] = React.useState<string | null>(null); // Track active button
   const { toast } = useToast();
 
   const detectOperator = (number: string) => {
     let foundOperator: string | null = null;
-    let isLandlineOrADSL = false;
+    let logoPath: string | null = null;
 
-    // Prioritize Landline/ADSL check if number starts with 0
-    if (number.startsWith('0')) {
-        const landlinePrefix = number.substring(0, 2);
-        if (operatorPrefixes['Landline'].includes(landlinePrefix)) {
-            isLandlineOrADSL = true;
-            // Basic heuristic: Could be ADSL or Landline. Default to ADSL for now if length suggests it.
-            // In a real app, you might need a more robust check or user selection.
-            foundOperator = number.length > 5 ? 'ADSL' : 'Landline';
+    // Iterate through all operators including landline/ADSL
+    for (const operator in operatorPrefixes) {
+      for (const prefix of operatorPrefixes[operator]) {
+        if (number.startsWith(prefix)) {
+           // Basic differentiation between Landline and ADSL based on length or specific prefixes if needed
+           // For now, if it matches a landline prefix, check length or keep it simple.
+           if (operator === 'الهاتف الأرضي' || operator === 'ADSL') {
+               // Simple heuristic: If number is longer (e.g., > 7 digits typical for ADSL accounts) assume ADSL
+               // This needs refinement based on actual numbering schemes.
+               foundOperator = number.length > 7 ? 'ADSL' : 'الهاتف الأرضي';
+           } else {
+               foundOperator = operator; // Assign mobile operator
+           }
+           logoPath = operatorLogos[foundOperator] || null; // Get logo for the determined operator
+           break; // Prefix matched, stop checking for this operator
         }
+      }
+       if (foundOperator) break; // Operator found, stop searching
     }
-
-    // If not identified as Landline/ADSL, check mobile prefixes
-    if (!isLandlineOrADSL) {
-        for (const operator in operatorPrefixes) {
-            // Skip Landline/ADSL check here
-            if (operator === 'Landline' || operator === 'ADSL') continue;
-
-            for (const prefix of operatorPrefixes[operator]) {
-                if (number.startsWith(prefix)) {
-                    foundOperator = operator;
-                    break; // Found mobile operator match
-                }
-            }
-            if (foundOperator) break; // Exit outer loop if mobile found
-        }
-    }
-
 
     setDetectedOperator(foundOperator);
-    setOperatorLogo(foundOperator ? operatorLogos[foundOperator] || null : null);
+    setOperatorLogo(logoPath);
 
     if (foundOperator) {
         setShowPackages(true);
-        setIsFetchingPackages(true); // Start loading packages
-        // Simulate fetching packages
-        setTimeout(() => {
-            setIsFetchingPackages(false);
-        }, 500); // Simulate network delay
+        setIsFetchingPackages(true);
+        setTimeout(() => setIsFetchingPackages(false), 500); // Simulate loading
     } else {
         setShowPackages(false);
     }
   };
 
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value.replace(/[^0-9]/g, ''); // Allow only numbers
     setPhoneNumber(value);
-    if (value.length >= 2) { // Start detection after 2 digits
+    // Start detection based on prefix length (e.g., 2 for mobile, 1 or 2 for landline)
+    if (value.length >= 2 || (value.startsWith('0') && value.length >= 2)) {
       detectOperator(value);
     } else {
       setDetectedOperator(null);
@@ -140,136 +129,133 @@ export default function RechargePage() {
   };
 
  const handleRechargeClick = (pkg: PackageInfo) => {
-    setIsLoading(true); // Show loading indicator on the specific button clicked (needs state management per button or a global loading state)
+    setActiveButtonId(pkg.id); // Set active button
+    setIsLoading(true);
     console.log(`Attempting to recharge package: ${pkg.name} for number: ${phoneNumber}`);
     toast({
       title: "بدء عملية الشحن",
       description: `جاري شحن ${pkg.name} للرقم ${phoneNumber}...`,
     });
 
-    // Simulate API call / recharge process
     setTimeout(() => {
       setIsLoading(false);
-      // Simulate success/failure
+      setActiveButtonId(null); // Reset active button after operation
       const isSuccess = Math.random() > 0.2; // 80% success rate
       if (isSuccess) {
          toast({
             title: "نجاح العملية",
             description: `تم شحن ${pkg.name} بنجاح للرقم ${phoneNumber}!`,
-            variant: "default", // Consider a 'success' variant if defined in globals.css
+            variant: "default", // Use primary color style
         });
-        // Optionally clear input or navigate away after success
-        // setPhoneNumber('');
-        // setDetectedOperator(null);
       } else {
          toast({
             title: "فشل العملية",
-            description: `حدث خطأ أثناء شحن ${pkg.name}. الرصيد غير كافٍ أو مشكلة في الشبكة.`,
-            variant: "destructive",
+            description: `حدث خطأ أثناء شحن ${pkg.name}. يرجى المحاولة لاحقاً.`,
+            variant: "destructive", // Use destructive style
         });
       }
-    }, 2000); // Simulate 2 second delay
+    }, 1500); // Simulate 1.5 second delay
   };
 
 
   return (
+    // Use bg-background (Light Gray)
     <div className="flex min-h-screen flex-col bg-background">
-      {/* Header - Updated Style */}
+      {/* Header - Teal background, White text/icons */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-primary px-4 py-2 text-primary-foreground shadow-md">
-        {/* Link back to services page or home, updated hover effect */}
         <Link href="/services" passHref>
           <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary/80">
-            <ArrowLeft className="h-5 w-5" />
+            <ArrowRight className="h-5 w-5" /> {/* Use ArrowRight for RTL back */}
             <span className="sr-only">رجوع</span>
           </Button>
         </Link>
-        <h1 className="text-lg font-semibold">التعبئة</h1>
-        <div className="w-10"></div> {/* Placeholder for potential actions like help icon */}
+        <h1 className="text-lg font-semibold">التعبئة</h1> {/* White text */}
+        <div className="w-10"></div> {/* Placeholder */}
       </header>
 
-      {/* Main Content Area - Updated Padding and Spacing */}
-      <main className="flex-1 space-y-5 p-4 pt-6 md:p-6 md:pt-8">
-        {/* Phone Number Input - Enhanced Style */}
+      {/* Main Content Area - Padding and spacing */}
+      <main className="flex-1 space-y-4 p-4 pt-6 md:p-6 md:pt-8"> {/* Adjusted spacing */}
+        {/* Phone Number Input */}
         <div className="relative flex items-center">
-           <Phone className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" /> {/* Icon inside input */}
+           {/* Input field: White background, rounded, shadow, larger text */}
            <Input
-              type="tel" // Use tel type for numeric keyboard on mobile
+              type="tel"
               placeholder="أدخل رقم الهاتف أو الأرضي"
               value={phoneNumber}
               onChange={handleInputChange}
-              // Increased padding-left for icon, padding-right for logo space, larger text, modern look
+              // Rounded-lg (8px), shadow-sm, text-lg, specific padding for logo
               className={cn(
-                "w-full rounded-xl border-border bg-card py-3 pl-12 pr-14 text-lg shadow-sm transition-shadow duration-200 focus:border-primary focus:shadow-md focus:ring-1 focus:ring-ring",
-                operatorLogo ? "pr-14" : "pr-4" // Adjust padding if logo is present
+                "w-full rounded-lg border-border bg-card py-3 pl-4 pr-14 text-lg shadow-sm focus:border-primary focus:ring-1 focus:ring-ring" // pr-14 leaves space for logo
               )}
-              maxLength={15} // Optional: limit input length
+              maxLength={15}
+              dir="ltr" // Ensure LTR for phone number input itself
             />
-            {/* Operator Logo - Positioned inside input field */}
+            {/* Operator Logo - Positioned inside input field (right side for RTL layout) */}
             {operatorLogo && (
-                 <div className="absolute right-3 top-1/2 -translate-y-1/2 transform transition-opacity duration-300 ease-in-out">
-                   <Image src={operatorLogo} alt={detectedOperator || 'Operator'} width={36} height={36} className="object-contain rounded-md" /> {/* Slightly larger logo */}
+                 <div className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2 transform overflow-hidden rounded-md"> {/* 32x32px */}
+                   <Image src={operatorLogo} alt={detectedOperator || 'Operator'} width={32} height={32} className="object-contain" />
                  </div>
             )}
         </div>
 
-        {/* Operator/Error Message - Centered and styled */}
+        {/* Operator/Error Message */}
         {phoneNumber.length >= 2 && !detectedOperator && (
-          <p className="text-center text-sm text-destructive font-medium">المشغل غير مدعوم حالياً أو الرقم غير صحيح.</p>
-        )}
-         {phoneNumber.length > 0 && phoneNumber.length < 2 && (
-          <p className="text-center text-xs text-muted-foreground">أدخل المزيد من الأرقام لتحديد المشغل.</p>
+          <p className="text-center text-sm text-destructive">المشغل غير مدعوم حالياً.</p>
         )}
 
-        {/* Package List Section - Enhanced Card and List Styling */}
+        {/* Package List Section */}
         {showPackages && detectedOperator && (
-          <Card className="overflow-hidden rounded-2xl bg-card shadow-lg"> {/* Enhanced rounding and shadow */}
-             <CardHeader className="bg-muted/30 p-4 border-b"> {/* Lighter header, border */}
-                <CardTitle className="text-center text-base font-semibold text-foreground">
-                    <Package className="inline-block h-5 w-5 mr-2 align-middle text-primary"/> {/* Icon in title */}
+          // Use Card component for structure, but styling is applied below
+          <div className="mt-4">
+             <h2 className="mb-3 text-center text-base font-semibold text-foreground">
+                    <Package className="inline-block h-5 w-5 mr-2 align-middle text-primary"/>
                     باقات {detectedOperator} المتاحة
-                </CardTitle>
-             </CardHeader>
-            <CardContent className="p-0">
-               <ScrollArea className="h-[calc(100vh-280px)]"> {/* Adjusted height based on surrounding elements */}
+                </h2>
+               <ScrollArea className="h-[calc(100vh-260px)]"> {/* Adjust height as needed */}
                  {isFetchingPackages ? (
                     <div className="flex justify-center items-center p-10">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                  ) : (packagesData[detectedOperator] || []).length > 0 ? (
-                     <div className="divide-y divide-border"> {/* Use dividers instead of space-y */}
+                     <div className="space-y-2"> {/* space-y-2 for 8px margin */}
                         {packagesData[detectedOperator]?.map((pkg) => (
-                            <div key={pkg.id} className="flex items-center justify-between p-4 hover:bg-muted/20 transition-colors duration-150">
-                                <div className="flex-1 space-y-1 mr-3">
-                                    <p className="text-base font-semibold text-foreground">{pkg.name}</p>
-                                    {pkg.description && <p className="text-xs text-muted-foreground">{pkg.description}</p>}
-                                    <p className="text-sm font-medium text-primary flex items-center gap-1 pt-1">
-                                        <CircleDollarSign className="h-4 w-4" />
-                                        {pkg.price > 0 ? `${pkg.price} ريال` : (pkg.description?.includes('مبلغ') ? 'حسب المبلغ' : 'حسب الفاتورة')}
-                                    </p>
+                           // Package Card: White bg, rounded-xl, shadow-md
+                            <Card key={pkg.id} className="overflow-hidden rounded-xl bg-card p-3 shadow-md transition-transform duration-150 ease-in-out active:scale-[0.98] active:shadow-sm"> {/* p-3 for 12px padding */}
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className="flex-1 space-y-1">
+                                        <p className="text-base font-semibold text-foreground">{pkg.name}</p>
+                                        {pkg.description && <p className="text-xs text-muted-foreground">{pkg.description}</p>}
+                                        <p className="text-sm font-medium text-primary flex items-center gap-1 pt-1">
+                                            <CircleDollarSign className="h-4 w-4" />
+                                            {/* Handle price display */}
+                                            {typeof pkg.price === 'number' && pkg.price > 0
+                                              ? `${pkg.price} ريال`
+                                              : pkg.price /* Display string like "حسب المبلغ" */}
+                                        </p>
+                                    </div>
+                                    {/* Recharge Button: Orange bg, White text, rounded-lg */}
+                                    <Button
+                                        size="sm"
+                                        variant="default" // Use default and control color via bg-accent
+                                        className="bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm hover:bg-accent/90 active:bg-accent/80 h-auto rounded-lg transition-all"
+                                        onClick={() => handleRechargeClick(pkg)}
+                                        disabled={isLoading && activeButtonId === pkg.id} // Disable only the clicked button
+                                    >
+                                        {(isLoading && activeButtonId === pkg.id) ? (
+                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                        ) : (
+                                            'اشحن الآن'
+                                        )}
+                                    </Button>
                                 </div>
-                                <Button
-                                    size="sm"
-                                    variant="default" // Use default which should map to primary now
-                                    className="bg-accent px-4 py-2 text-sm font-medium text-accent-foreground shadow-sm hover:bg-accent/90 active:bg-accent/80 h-auto rounded-lg transition-all duration-200 ease-in-out hover:shadow-md" // Adjusted styles
-                                    onClick={() => handleRechargeClick(pkg)}
-                                    disabled={isLoading} // Disable button while loading
-                                >
-                                    {/* Conditional loading indicator */}
-                                    {isLoading ? (
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                    ) : (
-                                        'اشحن الآن'
-                                    )}
-                                </Button>
-                            </div>
+                            </Card>
                         ))}
                      </div>
                  ) : (
                     <p className="p-6 text-center text-muted-foreground">لا توجد باقات متاحة حالياً لهذا المشغل.</p>
                  )}
                </ScrollArea>
-            </CardContent>
-          </Card>
+            </div>
         )}
       </main>
     </div>
