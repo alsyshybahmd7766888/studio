@@ -4,33 +4,32 @@
 
 @layer base {
   :root {
-    --background: 145 63% 49%; /* Bright Green - Main BG */
-    --foreground: 210 10% 15%; /* Blackish - Subtext */
-    --card: 0 0% 100%; /* White - Card BG */
-    --card-foreground: 210 10% 15%; /* Blackish - Card Text */
-    --popover: 0 0% 100%;
-    --popover-foreground: 210 10% 15%;
-    --primary: 145 63% 49%; /* Bright Green */
-    --primary-foreground: 0 0% 100%; /* White - Heading Text */
-    --secondary: 30 90% 55%; /* Orange */
+    --background: 204 25% 97%; /* #F7F9FA - Very Light Gray */
+    --foreground: 210 10% 23%; /* #333A40 - Dark Gray */
+    --card: 0 0% 100%; /* White */
+    --card-foreground: 210 10% 23%; /* Dark Gray */
+    --popover: 0 0% 100%; /* White */
+    --popover-foreground: 210 10% 23%; /* Dark Gray */
+    --primary: 190 100% 27%; /* #007B8A - Dark Teal */
+    --primary-foreground: 0 0% 100%; /* White */
+    --secondary: 199 100% 20%; /* #004E66 - Dark Blue */
     --secondary-foreground: 0 0% 100%; /* White */
-    --muted: 210 17% 90%; /* Light Gray */
-    --muted-foreground: 210 10% 45%; /* Darker Gray */
-    --accent: 30 90% 55%; /* Orange - Explicit Accent */
+    --muted: 210 15% 90%; /* #E1E5E9 - Light Grayish Blue */
+    --muted-foreground: 210 8% 45%; /* #6A7078 - Medium Gray */
+    --accent: 17 100% 62%; /* #FF6F3C - Bright Orange */
     --accent-foreground: 0 0% 100%; /* White */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 145 63% 70%; /* Lighter Green border */
-    --input: 145 63% 95%; /* Very Light Green input BG */
-    --ring: 30 90% 55%; /* Orange for focus rings */
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
-    --dark-green: 145 70% 30%; /* Custom dark green for logo */
-    /* Sidebar colors (keep defaults or adjust as needed) */
+    --destructive: 0 84.2% 60.2%; /* Default Red */
+    --destructive-foreground: 0 0% 98%; /* Default Light */
+    --border: 210 10% 85%; /* #D3D8DE - Light Gray */
+    --input: 210 10% 92%; /* #E4E7EB - Lighter Gray */
+    --ring: 17 100% 62%; /* Accent Orange */
+    --chart-1: 190 100% 35%; /* Teal variations for charts */
+    --chart-2: 199 100% 30%; /* Dark Blue variations */
+    --chart-3: 17 100% 70%; /* Orange variations */
+    --chart-4: 210 10% 50%; /* Gray variations */
+    --chart-5: 195 100% 40%; /* Other blue/teal variations */
+    --radius: 0.75rem; /* ~12px */
+    /* Keep sidebar colors separate for now unless specified */
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;
@@ -42,33 +41,31 @@
   }
 
   .dark {
-    /* TODO: Adjust dark mode colors for the 4Now theme if needed */
-    --background: 145 63% 10%; /* Dark Green */
-    --foreground: 0 0% 98%; /* White/Light Gray */
-    --card: 145 50% 15%; /* Darker Green/Gray */
-    --card-foreground: 0 0% 98%;
-    --popover: 145 50% 15%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 145 63% 49%; /* Keep Bright Green */
-    --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 30 90% 55%; /* Keep Orange */
+    --background: 210 10% 15%; /* Dark Gray/Blue */
+    --foreground: 210 10% 95%; /* Light Gray/White */
+    --card: 210 10% 20%;
+    --card-foreground: 210 10% 95%;
+    --popover: 210 10% 20%;
+    --popover-foreground: 210 10% 95%;
+    --primary: 190 100% 35%; /* Slightly lighter Teal */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 199 100% 30%; /* Slightly lighter Dark Blue */
     --secondary-foreground: 0 0% 100%;
-    --muted: 145 30% 25%; /* Dark Muted Green/Gray */
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 30 90% 55%; /* Keep Orange */
-    --accent-foreground: 0 0% 100%;
-    --destructive: 0 62.8% 30.6%;
+    --muted: 210 10% 25%;
+    --muted-foreground: 210 5% 65%;
+    --accent: 17 100% 70%; /* Slightly lighter Orange */
+    --accent-foreground: 210 10% 15%; /* Dark text on light orange */
+    --destructive: 0 62.8% 30.6%; /* Darker Red */
     --destructive-foreground: 0 0% 98%;
-    --border: 145 63% 30%; /* Darker Green Border */
-    --input: 145 40% 20%; /* Dark Input BG */
-    --ring: 30 90% 55%; /* Keep Orange Ring */
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --dark-green: 145 70% 60%; /* Adjust dark green for dark mode */
-    /* Sidebar colors (dark mode) */
+    --border: 210 10% 30%;
+    --input: 210 10% 25%;
+    --ring: 17 100% 70%; /* Lighter Accent Orange */
+    --chart-1: 190 100% 45%;
+    --chart-2: 199 100% 40%;
+    --chart-3: 17 100% 75%;
+    --chart-4: 210 10% 60%;
+    --chart-5: 195 100% 50%;
+    /* Dark Sidebar colors */
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;
