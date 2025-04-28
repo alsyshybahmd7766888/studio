@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -189,7 +190,7 @@ export {
   DropdownMenuCheckboxItem,
   DropdownMenuRadioItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
+  DropdownMenuSeparator, // Ensure Separator is exported
   DropdownMenuShortcut,
   DropdownMenuGroup,
   DropdownMenuPortal,
