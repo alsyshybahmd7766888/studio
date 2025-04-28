@@ -27,7 +27,7 @@ import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import Image from 'next/image'; // Import Image
 
-// Custom SimCard Icon (Inline SVG)
+// Custom SimCard Icon (Inline SVG) - Reusable component
 const SimCardIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect width="16" height="20" x="4" y="2" rx="2" ry="2" />
@@ -47,7 +47,7 @@ const homeServiceIcons = [
   { label: 'كبيبة السداد', icon: Smartphone, href: '/recharge' },
   { label: 'إدارة العملاء', icon: Cog, href: '#' }, // Use Cog icon
   { label: 'التحويل لحساب', icon: DollarSign, href: '#' },
-  { label: 'الشرائح', icon: SimCardIcon, href: '#' }, // Use custom SimCard icon
+  { label: 'الشرائح', icon: SimCardIcon, href: '/simcards' }, // Updated href to /simcards
   { label: 'البرامج', icon: ShoppingCart, href: '#' },
   { label: 'معرض الألعاب', icon: Gamepad2, href: '/games' }, // Updated href to /games
 ];
