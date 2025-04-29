@@ -1,7 +1,6 @@
-
 'use client';
 
-// Remove specific import if not used
+import * as React from 'react'; // Import React
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 // Update icons if needed, ensure they are relevant
