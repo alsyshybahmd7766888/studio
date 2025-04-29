@@ -8,24 +8,9 @@ import { Button } from '@/components/ui/button';
 import { ServiceCard } from '@/components/service-card'; // Ensure this uses the new theme
 import { useToast } from "@/hooks/use-toast";
 
-// Program/App services data based on the user's list
+// Program/App services data based on the user's list - Keep only active ones (none are active currently)
 const programServicesData = [
-  { name: 'توب توب', link: '#' },
-  { name: 'عملات تيكتوك', link: '#' },
-  { name: 'اهلا شات', link: '#' },
-  { name: 'كونزات كفو', link: '#' },
-  { name: 'كوينزات تالك تالك', link: '#' }, // Combined 'كوينزات تالك' and 'كوينزات تالك تالك'
-  { name: 'يلا لايف قطع ذهبية', link: '#' },
-  { name: 'سول شيل', link: '#' },
-  { name: 'نتفلكس', link: '#' },
-  { name: 'تحويل الى حساب بايننس', link: '#' },
-  { name: 'سواء شات', link: '#' },
-  { name: 'هابي شات', link: '#' },
-  { name: 'بينمو شات', link: '#' },
-  { name: 'ازال لايف', link: '#' },
-  { name: 'اوهلا شات', link: '#' },
-  { name: 'لما شات', link: '#' },
-  { name: 'SUGO - سوجو', link: '#' }, // Combined 'SUGO - سوجو' and 'سوجو - SUGO'
+ // Removed all items as their href was '#'
 ];
 
 
@@ -43,7 +28,7 @@ export default function ProgramsPage() {
         });
     };
 
-   const handleServiceClick = (service: typeof programServicesData[0]) => {
+   const handleServiceClick = (service: { name: string, link: string }) => {
       console.log(`Handling click for ${service.name}...`);
       setActiveService(service.name);
 
@@ -92,19 +77,27 @@ export default function ProgramsPage() {
       {/* Main Content Area - Program Services Grid */}
       {/* Padding, background inherited */}
       <main className="flex-1 p-4 pt-6 md:p-6 md:pt-8">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"> {/* gap-3 for 12px */}
-          {programServicesData.map((service, index) => (
-            <ServiceCard
-              key={index}
-               // Use service name or parts of it for the icon circle text
-              iconText={service.name.split(' ')[0]} // Use first word
-              buttonText={service.name}
-              onClick={() => handleServiceClick(service)}
-              isActive={activeService === service.name}
-            />
-          ))}
-        </div>
+        {programServicesData.length > 0 ? (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"> {/* gap-3 for 12px */}
+              {programServicesData.map((service, index) => (
+                <ServiceCard
+                  key={index}
+                   // Use service name or parts of it for the icon circle text
+                  iconText={service.name.split(' ')[0]} // Use first word
+                  buttonText={service.name}
+                  onClick={() => handleServiceClick(service)}
+                  isActive={activeService === service.name}
+                />
+              ))}
+            </div>
+        ) : (
+            <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">لا توجد خدمات برامج متاحة حالياً.</p>
+            </div>
+        )}
       </main>
     </div>
   );
 }
+
+    

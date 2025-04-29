@@ -10,20 +10,14 @@ import { ServiceCard } from '@/components/service-card'; // Ensure this componen
 import { useToast } from "@/hooks/use-toast";
 import { cn } from '@/lib/utils';
 
-// Services data - Refreshed structure and icons
+// Services data - Refreshed structure and icons - Keep only active ones
 const servicesData = [
   { icon: SmartphoneCharging, buttonText: 'كبيبة السداد', href: '/services/recharge' },
-  { icon: Repeat, buttonText: 'تحويل لحساب عميل', href: '#' }, // Placeholder
-  { iconText: 'MTN', buttonText: 'باقات MTN', href: '#' }, // Placeholder
-  { iconText: 'سبافون', buttonText: 'باقات سبافون', href: '#' }, // Placeholder
-  { iconText: 'Y', buttonText: 'باقات YOU', href: '#' }, // Placeholder for YOU
-  { iconText: 'مزاجك', buttonText: 'خطك.. بمزاجك', href: '#' }, // Placeholder
   { icon: Headset, buttonText: 'الدعم الفني', href: '/services/support' }, // Updated href
-  { icon: LayoutGrid, buttonText: 'الخدمات الإضافية', href: '#' }, // Placeholder
-  { icon: Wifi, buttonText: 'عدن نت', href: '#' }, // Placeholder
   { icon: CreditCard, buttonText: 'شرائح شبكة YOU', href: '/services/simcards' },
    { icon: Gamepad2, buttonText: 'معرض الألعاب', href: '/services/games' }, // Use Gamepad2
    { icon: ShoppingCart, buttonText: 'البرامج', href: '/services/programs' }, // Use ShoppingCart
+  // Removed: 'تحويل لحساب عميل', 'باقات MTN', 'باقات سبافون', 'باقات YOU', 'خطك.. بمزاجك', 'الخدمات الإضافية', 'عدن نت'
 ];
 
 export default function ServicesPage() {
@@ -94,7 +88,8 @@ export default function ServicesPage() {
        {/* Padding and background color inherited */}
       <main className="flex-1 p-4 pt-6 md:p-6 md:pt-8">
         {/* Grid layout with specified gap */}
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"> {/* gap-3 for 12px */}
+        {/* Adjust grid columns based on remaining active services */}
+        <div className={`grid grid-cols-${servicesData.length > 2 ? '2' : servicesData.length} gap-3 md:grid-cols-${Math.min(3, servicesData.length)} lg:grid-cols-${Math.min(4, servicesData.length)}`}>
           {servicesData.map((service, index) => (
             <ServiceCard
               key={index}
@@ -110,3 +105,5 @@ export default function ServicesPage() {
     </div>
   );
 }
+
+    

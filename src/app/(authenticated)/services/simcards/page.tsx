@@ -8,15 +8,9 @@ import { Button } from '@/components/ui/button';
 import { ServiceCard } from '@/components/service-card'; // Ensure this uses the new theme
 import { useToast } from "@/hooks/use-toast";
 
-// SIM card services data based on the user's list
+// SIM card services data based on the user's list - Keep only active ones (none are active currently)
 const simCardServicesData = [
-  { name: 'رقم دفع مسبق شريحة/برمجة', link: '#' }, // Merged "( رقم دفع مسبق )"
-  { name: 'بدل فاقد', link: '#' },
-  { name: 'تفعيل نت شرائح او برمجة', link: '#' }, // Merged "تفعيل نت شرائح"
-  { name: 'استعلام عن صاحب الرقم', link: '#' }, // Merged "استعلام عن"
-  { name: 'شريحه جديد YOU', link: '#' }, // Merged "شريحه"
-  { name: 'رقم جديد برونزي', link: '#' }, // Merged "رقم جديد"
-  { name: 'تفعيل الرقم فولتي', link: '#' }, // Merged "تفعيل الرقم"
+  // Removed all items as their href was '#'
 ];
 
 
@@ -34,7 +28,7 @@ export default function SimCardsPage() {
         });
     };
 
-   const handleServiceClick = (service: typeof simCardServicesData[0]) => {
+   const handleServiceClick = (service: { name: string, link: string }) => {
       console.log(`Handling click for ${service.name}...`);
       setActiveService(service.name);
 
@@ -83,19 +77,27 @@ export default function SimCardsPage() {
        {/* Main Content Area - SIM Services Grid */}
        {/* Padding, background inherited */}
       <main className="flex-1 p-4 pt-6 md:p-6 md:pt-8">
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"> {/* gap-3 for 12px */}
-          {simCardServicesData.map((service, index) => (
-            <ServiceCard
-              key={index}
-               // Use service name or parts of it for the icon circle text
-              iconText={service.name.split(' ')[0]} // Use first word
-              buttonText={service.name}
-              onClick={() => handleServiceClick(service)}
-              isActive={activeService === service.name}
-            />
-          ))}
-        </div>
+         {simCardServicesData.length > 0 ? (
+             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4"> {/* gap-3 for 12px */}
+              {simCardServicesData.map((service, index) => (
+                <ServiceCard
+                  key={index}
+                   // Use service name or parts of it for the icon circle text
+                  iconText={service.name.split(' ')[0]} // Use first word
+                  buttonText={service.name}
+                  onClick={() => handleServiceClick(service)}
+                  isActive={activeService === service.name}
+                />
+              ))}
+            </div>
+         ) : (
+             <div className="flex items-center justify-center h-full">
+                <p className="text-muted-foreground">لا توجد خدمات شرائح متاحة حالياً.</p>
+             </div>
+         )}
       </main>
     </div>
   );
 }
+
+    
