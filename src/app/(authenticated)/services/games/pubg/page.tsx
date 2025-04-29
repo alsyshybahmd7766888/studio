@@ -5,22 +5,22 @@ import Link from 'next/link';
 import { ArrowRight, Package, Loader2, CircleDollarSign, User } from 'lucide-react'; // Added User icon
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input'; // Import Input component
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+// import { useBalance } from '@/hooks/use-balance'; // Import balance context hook if created
 
 // Interface for PUBG packages including both currencies
 interface PubgPackageInfo {
     id: string;
     name: string;
     priceUSD: number | string; // Price in USD
-    priceYER: number | string; // Price in YER
+    priceYER: number | string; // Price in YER (Primary for balance check)
     description?: string;
 }
 
 // Placeholder PUBG package data with USD and YER prices
-// !! IMPORTANT: Replace these placeholder prices with actual values !!
 const pubgPackagesData: PubgPackageInfo[] = [
   { id: 'pubg60', name: 'بوبجي العالميه 60 شده', priceUSD: 0.99, priceYER: 500 },
   { id: 'pubg325', name: 'بوبجي العالميه 325 شده', priceUSD: 4.99, priceYER: 2500 },
@@ -41,6 +41,20 @@ export default function PubgRechargePage() {
   const [activeButtonId, setActiveButtonId] = React.useState<string | null>(null);
   const [playerId, setPlayerId] = React.useState(''); // State for Player ID
   const { toast } = useToast();
+  // const { balance, deductBalance } = useBalance(); // Get balance and deduction function
+
+  // --- Simulate Balance State ---
+  // Replace this with actual state management
+  const [currentBalance, setCurrentBalance] = React.useState(50000); // Example starting balance (in YER)
+
+  const deductBalance = (amount: number) => {
+    if (currentBalance >= amount) {
+      setCurrentBalance(prev => prev - amount);
+      return true;
+    }
+    return false;
+  };
+  // ------------------------------
 
  const handleRechargeClick = (pkg: PubgPackageInfo) => {
     // Check if Player ID is entered
@@ -53,31 +67,72 @@ export default function PubgRechargePage() {
       return; // Stop execution if Player ID is missing
     }
 
+    // --- Balance Check ---
+    const packagePriceYER = typeof pkg.priceYER === 'number' ? pkg.priceYER : 0; // Use YER for balance check
+
+    if (packagePriceYER <= 0) {
+         toast({
+             title: "خطأ",
+             description: "لا يمكن شحن هذه الباقة حالياً (السعر غير محدد).",
+             variant: "destructive",
+         });
+         return;
+     }
+
+    if (currentBalance < packagePriceYER) {
+        toast({
+            title: "رصيد غير كافٍ",
+            description: `رصيدك الحالي (${currentBalance} ريال) غير كافٍ لشحن هذه الباقة (${packagePriceYER} ريال).`,
+            variant: "destructive",
+        });
+        return; // Stop execution if balance is insufficient
+    }
+    // ---------------------
+
+
     setActiveButtonId(pkg.id);
     setIsLoading(true);
-    console.log(`Attempting to recharge PUBG package: ${pkg.name} for Player ID: ${playerId}`);
+    console.log(`Attempting to recharge PUBG package: ${pkg.name} for Player ID: ${playerId}. Cost: ${packagePriceYER} YER. Balance: ${currentBalance}`);
     toast({
       title: "بدء عملية الشحن",
       description: `جاري شحن ${pkg.name} لمعرف اللاعب ${playerId}...`,
-      variant: 'default',
+      variant: 'default', // Use default (primary) style
     });
 
-    // Simulate recharge process
+    // --- Simulate Backend Recharge API Call ---
+    // 1. Send request to backend: { playerId, packageId: pkg.id, userId: '...' }
+    // 2. Backend verifies user, package, player ID (optional, via PUBG API if available).
+    // 3. Backend calls Midasbuy/PUBG recharge API.
+    // 4. Backend confirms success/failure and deducts YER balance from user's account in the database.
+    // 5. Backend returns response.
+
     setTimeout(() => {
       setIsLoading(false);
       setActiveButtonId(null);
-      const isSuccess = Math.random() > 0.2; // Simulate success/failure
-      if (isSuccess) {
-         toast({
-            title: "نجاح العملية",
-            description: `تم شحن ${pkg.name} بنجاح لمعرف اللاعب ${playerId}!`,
-            variant: "default", // Use primary color style for success
-        });
-        setPlayerId(''); // Clear player ID on success
+      const isApiSuccess = Math.random() > 0.2; // Simulate API success/failure
+
+      if (isApiSuccess) {
+         // --- Deduct Balance on Frontend (Simulation) ---
+         const deducted = deductBalance(packagePriceYER); // Use the simulated function
+         if (deducted) {
+            toast({
+                title: "نجاح العملية",
+                description: `تم شحن ${pkg.name} بنجاح لمعرف اللاعب ${playerId}! الرصيد المتبقي: ${currentBalance - packagePriceYER} ريال.`,
+                variant: "default", // Use default (primary) style for success
+            });
+            setPlayerId(''); // Clear player ID on success
+         } else {
+             toast({
+                 title: "خطأ في الرصيد",
+                 description: `حدث خطأ أثناء خصم الرصيد.`,
+                 variant: "destructive",
+             });
+         }
+         // ---------------------------------------------
       } else {
          toast({
             title: "فشل العملية",
-            description: `حدث خطأ أثناء شحن ${pkg.name} لمعرف اللاعب ${playerId}. يرجى المحاولة لاحقاً.`,
+            description: `فشل الاتصال بمزود خدمة شحن الألعاب لـ ${pkg.name}. لم يتم خصم أي رصيد. يرجى المحاولة لاحقاً.`,
             variant: "destructive", // Use destructive (red) style
         });
       }
@@ -85,8 +140,9 @@ export default function PubgRechargePage() {
   };
 
   return (
+    // Background: Light Grey (#F7F9FA), Text: Dark Grey (#333333)
     <div className="flex min-h-screen flex-col bg-[#F7F9FA] text-[#333333]">
-      {/* Header */}
+      {/* Header - Teal background (#007B8A), White text */}
       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-[#007B8A] px-4 py-2 text-white shadow-md">
         {/* Back button to /services/games */}
         <Link href="/services/games" passHref>
@@ -104,18 +160,19 @@ export default function PubgRechargePage() {
         {/* Player ID Input */}
         <div className="relative mb-4 flex items-center">
              <Input
-               type="text"
+               type="text" // Use text, can add pattern for numbers if needed
+               name="playerId" // Add name
                placeholder="أدخل معرف اللاعب (Player ID)"
                value={playerId}
                onChange={(e) => setPlayerId(e.target.value)}
                className={cn(
-                 "h-12 w-full rounded-[8px] border border-border bg-white py-3 pl-4 pr-10 text-lg shadow-sm placeholder-[#9E9E9E] focus:border-[#007B8A] focus:ring-1 focus:ring-[#007B8A] text-[#333333]",
-                 "text-right"
+                 "h-12 w-full rounded-[8px] border border-[#E0E0E0] bg-white py-3 pl-4 pr-10 text-lg shadow-sm placeholder-[#9E9E9E] focus:border-[#007B8A] focus:ring-1 focus:ring-[#007B8A] text-[#333333]",
+                 "text-right" // Keep text aligned right
               )}
               maxLength={20} // Typical max length for IDs
-              dir="ltr" // Usually IDs are LTR
+              dir="ltr" // Usually IDs are LTR, keep LTR for input
              />
-             <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground/70" />
+             <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" /> {/* Icon color */}
          </div>
 
         {/* Package List */}
@@ -124,26 +181,30 @@ export default function PubgRechargePage() {
             <Package className="inline-block h-5 w-5 mr-2 align-middle text-[#333333]"/>
             اختر الباقة المطلوبة
           </h2>
-          <ScrollArea className="h-[calc(100vh-240px)]"> {/* Adjust height for the new input field */}
+           {/* Adjust height considering the Player ID input */}
+          <ScrollArea className="h-[calc(100vh-240px)]">
             {pubgPackagesData.length > 0 ? (
               <div className="space-y-2">
                 {pubgPackagesData.map((pkg) => (
+                  // Package Card: White bg, rounded-xl (12px), shadow-md
                   <Card key={pkg.id} className="overflow-hidden rounded-[12px] bg-white p-3 shadow-md transition-transform duration-150 ease-in-out active:scale-[0.98] active:shadow active:translate-y-[2px]">
                     <div className="flex items-center justify-between gap-3">
                       {/* Package details */}
                       <div className="flex-1 space-y-1 text-right">
+                         {/* Name: 16px bold, dark grey */}
                         <p className="text-base font-semibold text-[#333333]">{pkg.name}</p>
+                        {/* Description: Medium grey */}
                         {pkg.description && <p className="text-xs text-[#666666]">{pkg.description}</p>}
                         {/* Prices Section */}
                         <div className="flex flex-col items-end gap-1 pt-1">
-                          {/* YER Price */}
+                          {/* YER Price - Teal color */}
                            <p className="text-sm font-medium text-[#007B8A] flex items-center justify-end gap-1">
                                 <span className="font-sans text-xs font-light text-[#666666] mr-1">(YER)</span>
                                 {typeof pkg.priceYER === 'number' && pkg.priceYER > 0
                                     ? `${pkg.priceYER.toLocaleString()} ريال`
                                     : pkg.priceYER}
                            </p>
-                          {/* USD Price */}
+                          {/* USD Price - Medium grey */}
                           <p className="text-sm font-medium text-[#666666] flex items-center justify-end gap-1">
                              <span className="font-sans text-xs font-light text-[#999999] mr-1">(USD)</span>
                             {typeof pkg.priceUSD === 'number' && pkg.priceUSD > 0
@@ -152,11 +213,11 @@ export default function PubgRechargePage() {
                           </p>
                         </div>
                       </div>
-                      {/* Recharge Button */}
+                      {/* Recharge Button - Orange bg (#FF6F3C), White text, rounded 8px */}
                       <Button
                         size="sm"
-                        variant="default"
-                        className="px-4 py-1.5 text-sm font-medium shadow-sm h-auto rounded-[8px] transition-all bg-[#FF6F3C] text-white hover:bg-[#FF6F3C]/90 active:bg-[#FF6F3C]/80"
+                        // variant="accent" // Use custom class
+                        className="px-4 py-1.5 text-sm font-medium shadow-sm h-auto rounded-[8px] transition-all bg-[#FF6F3C] text-white hover:bg-[#FF6F3C]/90 active:bg-[#FF6F3C]/80" // Specific orange
                         onClick={() => handleRechargeClick(pkg)}
                         disabled={isLoading && activeButtonId === pkg.id}
                       >
@@ -171,6 +232,7 @@ export default function PubgRechargePage() {
                 ))}
               </div>
             ) : (
+              // No packages message: Medium grey
               <p className="p-6 text-center text-[#666666]">لا توجد باقات متاحة حالياً.</p>
             )}
           </ScrollArea>
@@ -179,3 +241,4 @@ export default function PubgRechargePage() {
     </div>
   );
 }
+

@@ -6,11 +6,12 @@ import Link from 'next/link';
 import { ArrowRight, Phone, Wifi, CircleDollarSign, Package, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'; // Keep Card for structure
+import { Card } from '@/components/ui/card'; // Keep Card for structure
 import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+// import { useBalance } from '@/hooks/use-balance'; // Import balance context hook if created
 
 // Updated operator prefixes based on 4ME structure
 const operatorPrefixes: { [key: string]: string[] } = {
@@ -51,7 +52,7 @@ const packagesData: { [key: string]: PackageInfo[] } = {
     { id: 'ym3', name: 'تعبئة رصيد مباشر', price: 'حسب المبلغ', description: 'أدخل مبلغ التعبئة' },
   ],
   'سبأفون': [
-    // Updated Sabafon Packages
+    // Updated Sabafon Packages (Using provided data)
     { id: 'sb-dp-yb-week', name: 'دفع مسبق يابلاش الاسبوعية', price: 484 },
     { id: 'sb-dp-yb-month', name: 'دفع مسبق يابلاش الشهرية', price: 1210 },
     { id: 'sb-dp-yb-superplus', name: 'دفع مسبق يابلاش سوبر بلاس', price: 3025 },
@@ -91,7 +92,7 @@ const packagesData: { [key: string]: PackageInfo[] } = {
     { id: 'sb-dp-4g-yb-month', name: 'يابلاش فورجي الشهرية - دفع مسبق', price: 2390 },
     { id: 'sb-dp-4g-yb-10days', name: 'يابلاش فورجي 10 أيام دفع مسبق', price: 1330 },
     { id: 'sb-dp-4g-yb-2days', name: 'يابلاش فورجي يومين - دفع مسبق', price: 'حسب الطلب' }, // No price given
-    // فوترة (Postpaid) - May filter out later if not directly rechargeable
+    // فوترة (Postpaid) - Can be filtered out or handled differently if needed
     { id: 'sb-post-yb-month', name: 'فوترة يابلاش الشهرية', price: 1210, category: 'فوترة' },
     { id: 'sb-post-yb-kalam', name: 'فوترة يابلاش كلام', price: 1210, category: 'فوترة' },
     { id: 'sb-post-wahed-month', name: 'فوترة باقة واحد الشهرية لكل الشبكات', price: 1513, category: 'فوترة' },
@@ -124,7 +125,7 @@ const packagesData: { [key: string]: PackageInfo[] } = {
     { id: 'sb-post-inter-layali', name: 'انتر ليالي - فوترة', price: 944, category: 'فوترة' },
     { id: 'sb-post-4g-inter-15gb', name: 'انتر فورجي 15 جيجا فوترة', price: 7260, category: 'فوترة' },
     { id: 'sb-post-4g-yb-month', name: 'يابلاش فورجي الشهرية - فوترة', price: 2390, category: 'فوترة' },
-    // Old placeholder kept for quick recharge
+    // Fallback for direct recharge if needed
     { id: 'sb-direct-recharge', name: 'تعبئة رصيد مباشر', price: 'حسب المبلغ', description: 'أدخل مبلغ التعبئة' },
   ],
   'YOU': [
@@ -200,6 +201,20 @@ export default function RechargePage() {
   const [isFetchingPackages, setIsFetchingPackages] = React.useState(false);
   const [activeButtonId, setActiveButtonId] = React.useState<string | null>(null);
   const { toast } = useToast();
+  // const { balance, deductBalance } = useBalance(); // Get balance and deduction function
+
+  // --- Simulate Balance State ---
+  // Replace this with actual state management (e.g., Context, Zustand, Redux)
+  const [currentBalance, setCurrentBalance] = React.useState(5000); // Example starting balance
+
+  const deductBalance = (amount: number) => {
+    if (currentBalance >= amount) {
+      setCurrentBalance(prev => prev - amount);
+      return true;
+    }
+    return false;
+  };
+  // ------------------------------
 
   const detectOperator = (number: string) => {
     let foundOperator: string | null = null;
@@ -219,13 +234,10 @@ export default function RechargePage() {
 
      // If no mobile operator found, check for landline/ADSL (based on '0' prefix)
      if (!foundOperator && number.startsWith('0') && number.length >= 2) {
-         // Simple check for landline/ADSL based on prefix '0' + area code digit
          const areaCodePrefix = number.substring(0, 2); // e.g., '01', '02'
          if (operatorPrefixes['الهاتف الأرضي'].includes(areaCodePrefix)) {
-             // Could add more logic here, e.g., length check, but for now assume '0'+area code is landline/ADSL
-             foundOperator = 'الهاتف الأرضي'; // Default to Landline, could change based on length if needed
-             // foundOperator = number.length > 7 ? 'ADSL' : 'الهاتف الأرضي'; // Example length check
-             logoPath = operatorLogos[foundOperator] || operatorLogos['ADSL'] || null; // Use Landline or ADSL logo
+             foundOperator = 'الهاتف الأرضي'; // Default to Landline
+             logoPath = operatorLogos[foundOperator] || operatorLogos['ADSL'] || null;
          }
      }
 
@@ -247,7 +259,6 @@ export default function RechargePage() {
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value.replace(/[^0-9]/g, ''); // Allow only numbers
     setPhoneNumber(value);
-    // Trigger detection after 2 digits generally, or 2 digits if starting with '0'
     if (value.length >= 2) {
       detectOperator(value);
     } else {
@@ -258,29 +269,74 @@ export default function RechargePage() {
   };
 
  const handleRechargeClick = (pkg: PackageInfo) => {
+    // --- Balance Check ---
+    const packagePrice = typeof pkg.price === 'number' ? pkg.price : 0; // Handle non-numeric prices
+
+    if (packagePrice <= 0) {
+         toast({
+             title: "خطأ",
+             description: "لا يمكن شحن هذه الباقة حالياً (السعر غير محدد).",
+             variant: "destructive",
+         });
+         return;
+     }
+
+    if (currentBalance < packagePrice) {
+        toast({
+            title: "رصيد غير كافٍ",
+            description: `رصيدك الحالي (${currentBalance} ريال) غير كافٍ لشحن هذه الباقة (${packagePrice} ريال).`,
+            variant: "destructive",
+        });
+        return; // Stop execution if balance is insufficient
+    }
+    // ---------------------
+
     setActiveButtonId(pkg.id);
     setIsLoading(true);
-    console.log(`Attempting to recharge package: ${pkg.name} for number: ${phoneNumber}`);
+    console.log(`Attempting to recharge package: ${pkg.name} for number: ${phoneNumber}. Cost: ${packagePrice}. Balance: ${currentBalance}`);
     toast({
       title: "بدء عملية الشحن",
       description: `جاري شحن ${pkg.name} للرقم ${phoneNumber}...`,
-      variant: 'default',
+      variant: 'default', // Use default (primary) style
     });
+
+    // --- Simulate Backend Recharge API Call ---
+    // 1. Send request to backend API with { phoneNumber, packageId: pkg.id, userId: '...' }
+    // 2. Backend verifies user, package, and performs the actual recharge via operator APIs.
+    // 3. Backend confirms success/failure and deducts balance from user's account in the database.
+    // 4. Backend returns response to the frontend.
 
     setTimeout(() => {
       setIsLoading(false);
       setActiveButtonId(null);
-      const isSuccess = Math.random() > 0.2;
-      if (isSuccess) {
-         toast({
-            title: "نجاح العملية",
-            description: `تم شحن ${pkg.name} بنجاح للرقم ${phoneNumber}!`,
-            variant: "default", // Use primary color style for success
-        });
+      const isApiSuccess = Math.random() > 0.2; // Simulate API success/failure
+
+      if (isApiSuccess) {
+         // --- Deduct Balance on Frontend (Simulation) ---
+         const deducted = deductBalance(packagePrice); // Use the simulated function
+         if (deducted) {
+            toast({
+                title: "نجاح العملية",
+                description: `تم شحن ${pkg.name} بنجاح للرقم ${phoneNumber}! الرصيد المتبقي: ${currentBalance - packagePrice} ريال.`, // Show remaining balance
+                variant: "default", // Use default (primary) style for success
+            });
+             // Optionally clear phone number or reset state
+            // setPhoneNumber('');
+            // setDetectedOperator(null);
+            // setShowPackages(false);
+         } else {
+             // This case should technically not happen due to the initial check, but good for robustness
+             toast({
+                title: "خطأ في الرصيد",
+                description: `حدث خطأ أثناء خصم الرصيد.`,
+                variant: "destructive",
+            });
+         }
+         // ---------------------------------------------
       } else {
          toast({
             title: "فشل العملية",
-            description: `حدث خطأ أثناء شحن ${pkg.name}. يرجى المحاولة لاحقاً.`,
+            description: `فشل الاتصال بمزود الخدمة لشحن ${pkg.name}. لم يتم خصم أي رصيد. يرجى المحاولة لاحقاً.`,
             variant: "destructive", // Use destructive (red) style
         });
       }
@@ -290,7 +346,10 @@ export default function RechargePage() {
   // Group packages by category for rendering
   const groupedPackages = React.useMemo(() => {
       if (!detectedOperator || !packagesData[detectedOperator]) return {};
-      return packagesData[detectedOperator].reduce((acc, pkg) => {
+       // Filter out 'فوترة' packages unless specific logic is added to handle them
+       const filteredPackages = packagesData[detectedOperator].filter(pkg => pkg.category !== 'فوترة');
+
+      return filteredPackages.reduce((acc, pkg) => {
           const category = pkg.category || 'عام'; // Default category if none provided
           if (!acc[category]) {
               acc[category] = [];
@@ -302,19 +361,19 @@ export default function RechargePage() {
 
 
   return (
-     // Use bg-background (#F7F9FA)
-    <div className="flex min-h-screen flex-col bg-[#F7F9FA] text-[#333333]"> {/* Updated background and text color */}
-       {/* Header - Primary background (#007B8A), White text */}
-       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-[#007B8A] px-4 py-2 text-white shadow-md"> {/* Updated header bg and text color */}
+     // Background: Light Grey (#F7F9FA), Text: Dark Grey (#333333)
+    <div className="flex min-h-screen flex-col bg-[#F7F9FA] text-[#333333]">
+       {/* Header - Teal background (#007B8A), White text */}
+       <header className="sticky top-0 z-40 flex h-16 items-center justify-between bg-[#007B8A] px-4 py-2 text-white shadow-md">
          {/* Back button to /services */}
         <Link href="/services" passHref>
-          <Button variant="ghost" size="icon" className="text-white hover:bg-[#007B8A]/80"> {/* White icon */}
+          <Button variant="ghost" size="icon" className="text-white hover:bg-[#007B8A]/80">
             <ArrowRight className="h-5 w-5" />
             <span className="sr-only">رجوع</span>
           </Button>
         </Link>
          {/* Title - White text */}
-        <h1 className="text-lg font-medium">التعبئة</h1> {/* White title text */}
+        <h1 className="text-lg font-medium">التعبئة</h1>
         <div className="w-10"></div> {/* Placeholder to balance */}
       </header>
 
@@ -322,15 +381,14 @@ export default function RechargePage() {
         <main className="flex-1 space-y-4 p-4 pt-6 md:p-6 md:pt-8"> {/* Padding: 16px */}
          {/* Phone Number Input Container */}
          <div className="relative flex items-center">
-            {/* Input field: White bg, rounded 8px, shadow */}
+            {/* Input field: White bg, rounded 8px, shadow, 18px font */}
             <Input
               type="tel"
               placeholder="أدخل رقم الهاتف أو الأرضي"
               value={phoneNumber}
               onChange={handleInputChange}
-              // Apply specified styling: h-12, rounded-md (8px), shadow-sm, text-lg, border
                className={cn(
-                 "h-12 w-full rounded-[8px] border border-border bg-white py-3 pl-4 pr-12 text-lg shadow-sm placeholder-[#9E9E9E] focus:border-[#007B8A] focus:ring-1 focus:ring-[#007B8A] text-[#333333]", // pr-12 for logo space, updated colors
+                 "h-12 w-full rounded-[8px] border border-[#E0E0E0] bg-white py-3 pl-4 pr-12 text-lg shadow-sm placeholder-[#9E9E9E] focus:border-[#007B8A] focus:ring-1 focus:ring-[#007B8A] text-[#333333]", // pr-12 for logo space
                  "text-right" // Align text to the right for RTL numbers
               )}
               maxLength={15}
@@ -338,7 +396,6 @@ export default function RechargePage() {
             />
             {/* Operator Logo - Positioned inside input field (right side) */}
             {operatorLogo && (
-                   // Ensure logo is 32x32 and positioned correctly
                    <div className="absolute right-3 top-1/2 h-8 w-8 -translate-y-1/2 transform overflow-hidden rounded-md"> {/* 32x32px */}
                     <Image src={operatorLogo} alt={detectedOperator || 'Operator'} width={32} height={32} className="object-contain" />
                   </div>
@@ -346,57 +403,54 @@ export default function RechargePage() {
         </div>
 
          {/* Operator/Error Message */}
-         {/* Show error if number entered but no operator detected */}
          {phoneNumber.length >= 2 && !detectedOperator && (
-           <p className="text-center text-sm text-destructive">المشغل غير مدعوم حالياً.</p> // Use destructive color for error
+           <p className="text-center text-sm text-red-600">المشغل غير مدعوم حالياً.</p> // Destructive text color
         )}
 
         {/* Package List Section */}
          {showPackages && detectedOperator && (
            <div className="mt-4">
-              {/* Title for packages - Use main text color */}
-               <h2 className="mb-3 text-center text-base font-semibold text-[#333333]"> {/* Updated text color */}
-                 <Package className="inline-block h-5 w-5 mr-2 align-middle text-[#333333]"/> {/* Updated icon color */}
+              <h2 className="mb-3 text-center text-base font-semibold text-[#333333]">
+                 <Package className="inline-block h-5 w-5 mr-2 align-middle text-[#333333]"/>
                  باقات {detectedOperator} المتاحة
              </h2>
-             {/* Scrollable area for packages */}
-                <ScrollArea className="h-[calc(100vh-280px)]"> {/* Adjust height based on header/input */}
+                <ScrollArea className="h-[calc(100vh-280px)]"> {/* Adjust height */}
                  {isFetchingPackages ? (
                       <div className="flex justify-center items-center p-10">
-                        <Loader2 className="h-8 w-8 animate-spin text-[#007B8A]" /> {/* Use primary color for spinner */}
+                        <Loader2 className="h-8 w-8 animate-spin text-[#007B8A]" /> {/* Teal spinner */}
                       </div>
                  ) : Object.keys(groupedPackages).length > 0 ? (
-                     <div className="space-y-4"> {/* space-y-4 for spacing between categories */}
+                     <div className="space-y-4"> {/* Space between categories */}
                          {Object.entries(groupedPackages).map(([category, pkgs]) => (
                              <div key={category}>
-                                 {/* Category Title (Optional but recommended) */}
+                                 {/* Category Title */}
                                  {category !== 'عام' && (
                                      <h3 className="mb-2 px-1 text-base font-medium text-[#666666]">{category}</h3>
                                  )}
-                                 <div className="space-y-2"> {/* space-y-2 for 8px margin between packages */}
+                                 <div className="space-y-2"> {/* Space between packages (8px) */}
                                      {pkgs.map((pkg) => (
                                          // Package Card: White bg, rounded-xl (12px), shadow-md
-                                         <Card key={pkg.id} className="overflow-hidden rounded-[12px] bg-white p-3 shadow-md transition-transform duration-150 ease-in-out active:scale-[0.98] active:shadow active:translate-y-[2px]"> {/* rounded-xl (12px), p-3, active effect */}
+                                         <Card key={pkg.id} className="overflow-hidden rounded-[12px] bg-white p-3 shadow-md transition-transform duration-150 ease-in-out active:scale-[0.98] active:shadow active:translate-y-[2px]">
                                              <div className="flex items-center justify-between gap-3">
                                                  {/* Package details */}
-                                                 <div className="flex-1 space-y-1 text-right"> {/* Text align right */}
-                                                     {/* Package Name: Dark grey, Bold */}
+                                                 <div className="flex-1 space-y-1 text-right">
+                                                     {/* Package Name: 16px Bold, Dark grey */}
                                                      <p className="text-base font-semibold text-[#333333]">{pkg.name}</p>
                                                      {/* Description: Medium grey */}
                                                      {pkg.description && <p className="text-xs text-[#666666]">{pkg.description}</p>}
-                                                     {/* Price: Primary color */}
-                                                     <p className="text-sm font-medium text-[#007B8A] flex items-center justify-end gap-1 pt-1"> {/* Updated Price Color */}
+                                                     {/* Price: Teal color */}
+                                                     <p className="text-sm font-medium text-[#007B8A] flex items-center justify-end gap-1 pt-1">
                                                          <CircleDollarSign className="h-4 w-4" />
                                                          {typeof pkg.price === 'number' && pkg.price > 0
                                                              ? `${pkg.price} ريال`
                                                              : pkg.price}
                                                      </p>
                                                  </div>
-                                                 {/* Recharge Button: Accent bg (#FF6F3C), White text, rounded 8px */}
+                                                 {/* Recharge Button: Orange bg (#FF6F3C), White text, rounded 8px */}
                                                  <Button
                                                      size="sm"
-                                                     variant="default" // Use default variant and override colors
-                                                     className="px-4 py-1.5 text-sm font-medium shadow-sm h-auto rounded-[8px] transition-all bg-[#FF6F3C] text-white hover:bg-[#FF6F3C]/90 active:bg-[#FF6F3C]/80" // Accent color button
+                                                     // variant="accent" // Using custom class for specific color
+                                                     className="px-4 py-1.5 text-sm font-medium shadow-sm h-auto rounded-[8px] transition-all bg-[#FF6F3C] text-white hover:bg-[#FF6F3C]/90 active:bg-[#FF6F3C]/80" // Specific orange button
                                                      onClick={() => handleRechargeClick(pkg)}
                                                      disabled={isLoading && activeButtonId === pkg.id}
                                                  >
