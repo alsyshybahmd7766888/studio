@@ -1,10 +1,11 @@
+
 'use client';
 
-import * as React from 'react';
+// Remove specific import if not used
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 // Update icons if needed, ensure they are relevant
-import { ArrowRight, RefreshCw, Smartphone, Repeat, SmartphoneCharging, Headset, LayoutGrid, Wifi, CreditCard, Gamepad2, ShoppingCart } from 'lucide-react';
+import { ArrowRight, RefreshCw, SmartphoneCharging, Repeat, Headset, LayoutGrid, Wifi, CreditCard, Gamepad2, ShoppingCart } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ServiceCard } from '@/components/service-card'; // Ensure this component uses new theme colors
 import { useToast } from "@/hooks/use-toast";
@@ -18,7 +19,7 @@ const servicesData = [
   { iconText: 'سبافون', buttonText: 'باقات سبافون', href: '#' }, // Placeholder
   { iconText: 'Y', buttonText: 'باقات YOU', href: '#' }, // Placeholder for YOU
   { iconText: 'مزاجك', buttonText: 'خطك.. بمزاجك', href: '#' }, // Placeholder
-  { icon: Headset, buttonText: 'الدعم الفني', href: '#' }, // Placeholder
+  { icon: Headset, buttonText: 'الدعم الفني', href: '/services/support' }, // Updated href
   { icon: LayoutGrid, buttonText: 'الخدمات الإضافية', href: '#' }, // Placeholder
   { icon: Wifi, buttonText: 'عدن نت', href: '#' }, // Placeholder
   { icon: CreditCard, buttonText: 'شرائح شبكة YOU', href: '/services/simcards' },
