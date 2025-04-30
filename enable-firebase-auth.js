@@ -9,7 +9,7 @@
  * 2. `npm install googleapis`
  *
  * Usage:
- *   node enable-firebase-auth.js path/to/service-account.json your-project-id
+ *   node enable-firebase-auth.js path/to/service-account.json easy-recharge-cx0ki
  */
 
 import { readFileSync } from "fs";
@@ -52,12 +52,13 @@ async function enableEmailPasswordSignIn(saKeyPath, projectId) {
   const [,, saKeyPath, projectId] = process.argv;
   if (!saKeyPath || !projectId) {
     console.error("Usage: node enable-firebase-auth.js <SERVICE_ACCOUNT_JSON> <PROJECT_ID>");
+    console.error("Example: node enable-firebase-auth.js ./path/to/key.json easy-recharge-cx0ki");
     process.exit(1);
   }
   try {
     await enableEmailPasswordSignIn(saKeyPath, projectId);
   } catch (e) {
-    console.error("❌ Failed to enable Email/Password:", e);
+    console.error("❌ Failed to enable Email/Password:", e.message || e);
     process.exit(1);
   }
 })();
