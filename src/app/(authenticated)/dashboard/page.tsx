@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation'; // Import useRouter
 import {
   Menu,
   Wallet,
@@ -278,5 +279,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    
