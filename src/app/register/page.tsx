@@ -87,7 +87,10 @@ export default function RegisterPage() {
        // return `${input}@4now.app`; // Use your domain or logic
        // Using username directly might fail if it's not a valid email format
        // Consider prompting for an actual email or using phone auth if username isn't email
-       return input; // WARNING: This might require custom auth or fail standard email/password
+       // Using phone number as email might require specific Firebase setup (e.g., custom claims or linking)
+       // For standard Email/Password, the username MUST be a valid email address.
+       // Let's assume the user enters their email in the 'username' field for now.
+       return input;
    };
 
   // --- Registration Handler ---
@@ -120,17 +123,20 @@ export default function RegisterPage() {
 
      // --- Format Email ---
      const email = formatEmail(formData.username);
-     // Basic email format check (optional but recommended if using email/password)
-     // if (!/\S+@\S+\.\S+/.test(email)) {
-     //    toast({ title: 'خطأ', description: 'اسم الدخول يجب أن يكون بصيغة بريد إلكتروني صحيحة.', variant: 'destructive'});
-     //    setIsLoading(false);
-     //    return;
-     // }
+     // Basic email format check - Crucial for Email/Password provider
+     if (!/\S+@\S+\.\S+/.test(email)) {
+        toast({ title: 'خطأ', description: 'اسم الدخول يجب أن يكون بصيغة بريد إلكتروني صحيحة.', variant: 'destructive'});
+        setIsLoading(false);
+        return;
+     }
 
     toast({ title: 'جاري التسجيل...', description: 'يتم إنشاء حسابك.', variant: 'default' });
 
     try {
       // 1. Create User in Firebase Auth
+      // Ensure the Email/Password sign-in method is ENABLED in your Firebase project console.
+      // Go to Firebase Console -> Authentication -> Sign-in method -> Enable Email/Password.
+      // This is the most common cause of the 'auth/configuration-not-found' error.
       const userCredential = await createUserWithEmailAndPassword(auth, email, formData.password);
       const user = userCredential.user;
       console.log('Firebase Auth user created:', user.uid);
@@ -189,6 +195,12 @@ export default function RegisterPage() {
            errorMessage = "صيغة اسم الدخول (البريد الإلكتروني) غير صحيحة.";
        } else if (error.code === 'auth/weak-password') {
            errorMessage = "كلمة المرور ضعيفة جداً.";
+       } else if (error.code === 'auth/configuration-not-found') {
+           // Specific message for this error
+           errorMessage = "لم يتم تفعيل طريقة الدخول بالبريد الإلكتروني/كلمة المرور في إعدادات Firebase. يرجى مراجعة إعدادات المشروع.";
+       } else if (error.code === 'auth/operation-not-allowed') {
+           // Another common error if Email/Password sign-in is disabled
+           errorMessage = "الدخول بالبريد الإلكتروني/كلمة المرور غير مسموح به في هذا المشروع.";
        }
       toast({
         title: 'فشل التسجيل',
@@ -201,16 +213,16 @@ export default function RegisterPage() {
   };
 
   return (
-    // Background: Teal (#007B8A)
-    <div className="flex min-h-screen flex-col items-center bg-primary px-4 pt-[32px] text-primary-foreground">
+    // Background: Teal (#007B8A) - Reverted based on user request
+    <div className="flex min-h-screen flex-col items-center bg-[#00A651] px-4 pt-[32px] text-primary-foreground">
       {/* Status Bar Area */}
       <div className="h-[24px] w-full"></div>
 
        {/* Logo Header */}
       <div className="mb-8 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-white shadow-lg">
          <span className="text-3xl font-bold">
-           <span className="text-primary">٤</span>
-           <span className="text-accent">Now</span>
+           <span className="text-[#00A651]">٤</span> {/* Use primary color */}
+           <span className="text-[#FF6F3C]">Now</span> {/* Use accent color */}
          </span>
       </div>
 
@@ -232,40 +244,41 @@ export default function RegisterPage() {
               <Input
                 type="text" name="fullName" placeholder="الاسم الرباعي مع اللقب"
                 value={formData.fullName} onChange={handleInputChange} disabled={isLoading}
-                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
+                className="h-12 rounded-lg border border-[#E0E0E0] bg-[#F9F9F9] pr-10 text-base placeholder:text-[#9E9E9E] text-[#333333]" // Specific colors from spec
                 dir="rtl"
               />
-              <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+              <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" /> {/* Specific icon color */}
             </div>
              {/* Business Activity */}
             <div className="relative">
               <Input
                 type="text" name="businessActivity" placeholder="النشاط التجاري"
                 value={formData.businessActivity} onChange={handleInputChange} disabled={isLoading}
-                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
+                className="h-12 rounded-lg border border-[#E0E0E0] bg-[#F9F9F9] pr-10 text-base placeholder:text-[#9E9E9E] text-[#333333]"
                 dir="rtl"
               />
-              <Store className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+              <Store className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
             </div>
              {/* Phone Number */}
             <div className="relative">
               <Input
                 type="tel" name="phoneNumber" placeholder="رقم الهاتف"
                 value={formData.phoneNumber} onChange={handleInputChange} disabled={isLoading}
-                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
+                className="h-12 rounded-lg border border-[#E0E0E0] bg-[#F9F9F9] pr-10 text-base placeholder:text-[#9E9E9E] text-[#333333]"
                 dir="rtl"
               />
-              <Phone className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+              <Phone className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
             </div>
              {/* Address */}
             <div className="relative">
               <Input
                 type="text" name="address" placeholder="العنوان"
                 value={formData.address} onChange={handleInputChange} disabled={isLoading}
-                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
+                className="h-12 rounded-lg border border-[#E0E0E0] bg-[#F9F9F9] pr-10 text-base placeholder:text-[#9E9E9E] text-[#333333]"
                 dir="rtl"
               />
-              <CheckCircle className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+              {/* Changed icon to MapPin as CheckCircle was used elsewhere */}
+              <MapPin className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
             </div>
           </div>
         </div>
@@ -284,22 +297,23 @@ export default function RegisterPage() {
             {/* Username (Email) */}
             <div className="relative">
               <Input
-                type="text" name="username" placeholder="اسم الدخول (بريد إلكتروني أو رقم هاتف)"
+                type="text" // Use text, validation ensures it's email format
+                name="username" placeholder="اسم الدخول (بريد إلكتروني)" // Specify email format expected
                 value={formData.username} onChange={handleInputChange} disabled={isLoading}
-                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
-                dir="rtl"
+                className="h-12 rounded-lg border border-[#E0E0E0] bg-[#F9F9F9] pr-10 text-base placeholder:text-[#9E9E9E] text-[#333333]"
+                dir="rtl" // Keep RTL for placeholder, input direction might depend on language settings
               />
-               <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+               <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
             </div>
             {/* Password */}
             <div className="relative">
               <Input
                 type={showPassword ? 'text' : 'password'} name="password" placeholder="كلمة المرور (6+ أحرف)"
                 value={formData.password} onChange={handleInputChange} disabled={isLoading}
-                className="h-12 rounded-lg border border-border bg-input px-10 text-base placeholder:text-muted-foreground text-foreground"
+                className="h-12 rounded-lg border border-[#E0E0E0] bg-[#F9F9F9] px-10 text-base placeholder:text-[#9E9E9E] text-[#333333]" // Use px-10 for eye icon space
                 dir="rtl"
               />
-              <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+              <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
               <button type="button" onClick={() => setShowPassword(!showPassword)} disabled={isLoading}
                  className="absolute left-3 top-1/2 -translate-y-1/2 transform text-muted-foreground hover:text-foreground"
                  aria-label={showPassword ? "إخفاء" : "إظهار"}>
@@ -311,10 +325,10 @@ export default function RegisterPage() {
               <Input
                  type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" placeholder="تأكيد كلمة المرور"
                  value={formData.confirmPassword} onChange={handleInputChange} disabled={isLoading}
-                 className="h-12 rounded-lg border border-border bg-input px-10 text-base placeholder:text-muted-foreground text-foreground"
+                 className="h-12 rounded-lg border border-[#E0E0E0] bg-[#F9F9F9] px-10 text-base placeholder:text-[#9E9E9E] text-[#333333]"
                  dir="rtl"
               />
-              <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+              <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
                <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} disabled={isLoading}
                  className="absolute left-3 top-1/2 -translate-y-1/2 transform text-muted-foreground hover:text-foreground"
                  aria-label={showConfirmPassword ? "إخفاء" : "إظهار"}>
@@ -326,15 +340,15 @@ export default function RegisterPage() {
 
         {/* Document Type Tabs */}
         <Tabs value={idType} onValueChange={setIdType} className="mt-4 w-full">
-           <TabsList className="grid h-auto w-full grid-cols-4 gap-2 bg-muted p-1">
-             {/* Active Tab: Accent bg, Accent-foreground text */}
-             {/* Inactive Tab: Card bg, Destructive text (red), Destructive border */}
+           <TabsList className="grid h-auto w-full grid-cols-4 gap-2 bg-transparent p-0"> {/* Transparent background for tabs list */}
+             {/* Active Tab: Red bg, White text */}
+             {/* Inactive Tab: White bg, Red text, Red border */}
              {(['personal-id', 'passport', 'commercial-reg', 'family-card'] as const).map((type) => (
                  <TabsTrigger key={type} value={type} disabled={isLoading}
                     className={cn(
-                        "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2",
-                        "data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm",
-                        "data-[state=inactive]:bg-card data-[state=inactive]:text-destructive data-[state=inactive]:border data-[state=inactive]:border-destructive data-[state=inactive]:hover:bg-destructive/10"
+                        "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/50 focus-visible:ring-offset-2", // Use red ring
+                        "data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white data-[state=active]:shadow-sm", // Active: Red bg, white text
+                        "data-[state=inactive]:bg-white data-[state=inactive]:text-[#FF3B30] data-[state=inactive]:border data-[state=inactive]:border-[#FF3B30] data-[state=inactive]:hover:bg-[#FF3B30]/10" // Inactive: White bg, red text/border
                     )}
                  >
                     { {
@@ -349,11 +363,11 @@ export default function RegisterPage() {
         </Tabs>
 
         {/* Image Upload Placeholders */}
-        <div className="mt-3 grid grid-cols-2 gap-3">
+        <div className="mt-3 grid grid-cols-2 gap-3"> {/* Gap 12px */}
             {/* Front Image */}
             <div
                 className={cn(
-                    "relative aspect-square w-full rounded-lg bg-muted flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/80",
+                    "relative aspect-square w-full rounded-lg bg-[#EEEEEE] flex flex-col items-center justify-center border-2 border-dashed border-[#E0E0E0] hover:border-[#00A651]/50 hover:bg-muted/80", // Use spec colors
                     !isLoading && "cursor-pointer" // Only show cursor if not loading
                 )}
                 onClick={() => !isLoading && frontImageRef.current?.click()}
@@ -362,8 +376,8 @@ export default function RegisterPage() {
                     <img src={URL.createObjectURL(idImageFront)} alt="Preview Front" className="h-full w-full object-cover rounded-lg" />
                  ) : (
                     <>
-                         <UploadCloud className="h-10 w-10 text-muted-foreground/50" />
-                         <span className="mt-1 text-xs text-muted-foreground">الوجه الأمامي*</span>
+                         <UploadCloud className="h-10 w-10 text-[#CCCCCC]" /> {/* Specific icon color */}
+                         <span className="mt-1 text-xs text-[#9E9E9E]">الوجه الأمامي*</span> {/* Placeholder color */}
                      </>
                  )}
                  <input ref={frontImageRef} type="file" accept="image/*" disabled={isLoading}
@@ -372,7 +386,7 @@ export default function RegisterPage() {
             {/* Back Image */}
             <div
                  className={cn(
-                    "relative aspect-square w-full rounded-lg bg-muted flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/80",
+                    "relative aspect-square w-full rounded-lg bg-[#EEEEEE] flex flex-col items-center justify-center border-2 border-dashed border-[#E0E0E0] hover:border-[#00A651]/50 hover:bg-muted/80",
                      !isLoading && "cursor-pointer"
                  )}
                 onClick={() => !isLoading && backImageRef.current?.click()}
@@ -381,8 +395,8 @@ export default function RegisterPage() {
                      <img src={URL.createObjectURL(idImageBack)} alt="Preview Back" className="h-full w-full object-cover rounded-lg" />
                 ) : (
                      <>
-                        <UploadCloud className="h-10 w-10 text-muted-foreground/50" />
-                        <span className="mt-1 text-xs text-muted-foreground">الوجه الخلفي (اختياري)</span>
+                        <UploadCloud className="h-10 w-10 text-[#CCCCCC]" />
+                        <span className="mt-1 text-xs text-[#9E9E9E]">الوجه الخلفي (اختياري)</span>
                      </>
                 )}
                  <input ref={backImageRef} type="file" accept="image/*" disabled={isLoading}
@@ -392,7 +406,7 @@ export default function RegisterPage() {
 
          {/* Register Button */}
         <Button
-           className="mt-4 h-12 w-full rounded-lg bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 active:bg-primary/80"
+           className="mt-4 h-12 w-full rounded-lg bg-[#009944] text-base font-medium text-white hover:bg-[#009944]/90 active:bg-[#009944]/80" // Specific green, white text
            onClick={handleRegister}
            disabled={isLoading} // Disable button while loading
         >
@@ -400,10 +414,11 @@ export default function RegisterPage() {
         </Button>
 
         {/* Login Link */}
-        <p className="mt-3 text-center text-sm font-light text-muted-foreground">
+        <p className="mt-3 text-center text-sm font-light text-[#9E9E9E]"> {/* Muted grey text */}
           هل لديك حساب؟{' '}
           <Link href="/login" passHref className={cn(isLoading && "pointer-events-none opacity-50")}>
-            <span className="cursor-pointer font-medium text-primary hover:underline hover:text-primary/80">
+             {/* Green link text */}
+            <span className="cursor-pointer font-medium text-[#009944] hover:underline hover:text-[#009944]/80">
               قم بالدخول
             </span>
           </Link>
@@ -412,8 +427,8 @@ export default function RegisterPage() {
       </div>
 
        {/* Footer */}
-      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-primary-foreground/80">
-         برمجة وتصميم (يمن روبوت)
+       <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-white"> {/* White text */}
+         برمجة وتصميم (يمن روبوت) 774541452 {/* Keep footer content as per spec */}
       </footer>
     </div>
   );
