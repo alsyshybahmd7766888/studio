@@ -1,5 +1,5 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from "firebase/app";
+import { initializeApp, getApps, getApp } from "firebase/app"; // Added getApp back
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 // Import other Firebase services as needed, e.g., getStorage
@@ -17,9 +17,12 @@ const firebaseConfig = {
 };
 
 // Basic check to see if config values are present
-if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_")) {
   console.error("Firebase API Key is missing or is a placeholder. Please check your .env.local file.");
-  // You might want to throw an error in a real application or handle this state
+  // Throw error only if in production maybe?
+  // if (process.env.NODE_ENV === 'production') {
+  //   throw new Error("Firebase configuration is missing or invalid.");
+  // }
 }
 
 
@@ -28,11 +31,11 @@ let app;
 if (!getApps().length) {
   app = initializeApp(firebaseConfig);
 } else {
-  app = getApp();
+  app = getApp(); // Use getApp() if already initialized
 }
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 // export const storage = getStorage(app); // Example for Storage
 
-export default app;
+export default app; // Export the initialized app
