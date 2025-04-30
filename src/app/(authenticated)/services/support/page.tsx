@@ -17,9 +17,9 @@ const WhatsAppIcon = () => (
 
 
 export default function TechnicalSupportPage() {
-    // Placeholder contact information
-    const supportPhoneNumber = '777-XXX-XXX';
-    const supportWhatsAppNumber = '967777XXXXXX'; // Use international format if needed
+    // Updated contact information
+    const supportPhoneNumber = '717168802'; // Updated Phone Number
+    const supportWhatsAppNumber = '967776437027'; // Updated WhatsApp Number (with country code)
     const supportEmail = 'support@4now.app'; // Example email
 
     const handleCall = () => {
@@ -29,7 +29,7 @@ export default function TechnicalSupportPage() {
 
     const handleWhatsApp = () => {
         console.log(`Opening WhatsApp chat with ${supportWhatsAppNumber}...`);
-        // Basic WhatsApp link (might need more specific formatting depending on region/API)
+        // Use the updated number with country code for the WhatsApp link
         window.open(`https://wa.me/${supportWhatsAppNumber}`, '_blank');
     };
 
@@ -82,7 +82,7 @@ export default function TechnicalSupportPage() {
                       onClick={handleWhatsApp}
                   >
                       <WhatsAppIcon /> {/* Use custom WhatsApp icon */}
-                      واتساب (+{supportWhatsAppNumber})
+                      واتساب (+{supportWhatsAppNumber}) {/* Display with '+' */}
                   </Button>
 
                   {/* Contact Option 3: Email */}
