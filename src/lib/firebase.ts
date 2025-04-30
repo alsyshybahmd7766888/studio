@@ -4,6 +4,8 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 // Import other Firebase services as needed, e.g., getStorage
 
+// These variables MUST be defined in your .env.local file
+// Copy them from your Firebase project settings
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
@@ -13,6 +15,13 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
   // measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Optional
 };
+
+// Basic check to see if config values are present
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey === "YOUR_API_KEY") {
+  console.error("Firebase API Key is missing or is a placeholder. Please check your .env.local file.");
+  // You might want to throw an error in a real application or handle this state
+}
+
 
 // Initialize Firebase
 let app;
