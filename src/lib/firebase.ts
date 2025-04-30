@@ -18,7 +18,7 @@ const firebaseConfig = {
 
 // Basic check to see if config values are present
 if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_")) {
-  console.error("Firebase API Key is missing or is a placeholder. Please check your .env.local file.");
+  // console.error("Firebase API Key is missing or is a placeholder. Please check your .env.local file.");
   // Throw error only if in production maybe?
   // if (process.env.NODE_ENV === 'production') {
   //   throw new Error("Firebase configuration is missing or invalid.");
