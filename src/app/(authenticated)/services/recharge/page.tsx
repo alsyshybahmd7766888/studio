@@ -11,7 +11,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import Image from 'next/image';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-// import { useBalance } from '@/hooks/use-balance'; // Import balance context hook if created
+import { useBalance } from '@/hooks/useBalance'; // Import balance context hook
+import { useAuth } from '@/hooks/useAuth'; // Import auth context hook
 
 // Updated operator prefixes based on 4ME structure
 const operatorPrefixes: { [key: string]: string[] } = {
@@ -197,24 +198,19 @@ export default function RechargePage() {
   const [detectedOperator, setDetectedOperator] = React.useState<string | null>(null);
   const [operatorLogo, setOperatorLogo] = React.useState<string | null>(null);
   const [showPackages, setShowPackages] = React.useState(false);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isFetchingPackages, setIsFetchingPackages] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false); // For API call loading state
+  const [isFetchingPackages, setIsFetchingPackages] = React.useState(false); // For package list loading
   const [activeButtonId, setActiveButtonId] = React.useState<string | null>(null);
+  const [directRechargeAmount, setDirectRechargeAmount] = React.useState(''); // For direct recharge input
+  const [showDirectRechargeInput, setShowDirectRechargeInput] = React.useState(false); // Toggle input visibility
+
   const { toast } = useToast();
-  // const { balance, deductBalance } = useBalance(); // Get balance and deduction function
+  const { balance, loading: balanceLoading, deductBalance, fetchBalance } = useBalance(); // Get balance context
+  const { user, loading: authLoading } = useAuth(); // Get user context
 
-  // --- Simulate Balance State ---
-  // Replace this with actual state management (e.g., Context, Zustand, Redux)
-  const [currentBalance, setCurrentBalance] = React.useState(5000); // Example starting balance
+  // Combined loading state
+  const isPageLoading = authLoading || balanceLoading;
 
-  const deductBalance = (amount: number) => {
-    if (currentBalance >= amount) {
-      setCurrentBalance(prev => prev - amount);
-      return true;
-    }
-    return false;
-  };
-  // ------------------------------
 
   const detectOperator = (number: string) => {
     let foundOperator: string | null = null;
@@ -244,11 +240,13 @@ export default function RechargePage() {
 
     setDetectedOperator(foundOperator);
     setOperatorLogo(logoPath);
+    setShowDirectRechargeInput(false); // Reset direct recharge input visibility on operator change
+    setDirectRechargeAmount(''); // Clear direct recharge amount
 
     if (foundOperator) {
         setShowPackages(true);
         setIsFetchingPackages(true);
-        // Simulate loading packages
+        // Simulate loading packages (replace with actual API call if needed)
         setTimeout(() => setIsFetchingPackages(false), 500);
     } else {
         setShowPackages(false);
@@ -268,79 +266,117 @@ export default function RechargePage() {
     }
   };
 
- const handleRechargeClick = (pkg: PackageInfo) => {
-    // --- Balance Check ---
-    const packagePrice = typeof pkg.price === 'number' ? pkg.price : 0; // Handle non-numeric prices
+ const handleRechargeClick = async (pkg: PackageInfo, directAmount?: number) => {
 
-    if (packagePrice <= 0) {
+     if (!user) {
+         toast({ title: "غير مصرح", description: "يرجى تسجيل الدخول أولاً.", variant: "destructive" });
+         return;
+     }
+
+     const amountToCharge = directAmount ?? (typeof pkg.price === 'number' ? pkg.price : 0);
+     const rechargeLabel = directAmount ? `تعبئة رصيد مباشر (${amountToCharge} ريال)` : pkg.name;
+
+     if (amountToCharge <= 0) {
          toast({
              title: "خطأ",
-             description: "لا يمكن شحن هذه الباقة حالياً (السعر غير محدد).",
+             description: "لا يمكن شحن هذه الباقة حالياً (السعر غير محدد أو غير صحيح).",
              variant: "destructive",
          });
          return;
      }
 
-    if (currentBalance < packagePrice) {
+     // --- Balance Check ---
+    if (balance < amountToCharge) {
         toast({
             title: "رصيد غير كافٍ",
-            description: `رصيدك الحالي (${currentBalance} ريال) غير كافٍ لشحن هذه الباقة (${packagePrice} ريال).`,
+            description: `رصيدك الحالي (${balance.toLocaleString()} ريال) غير كافٍ لشحن ${rechargeLabel} (${amountToCharge.toLocaleString()} ريال).`,
             variant: "destructive",
         });
         return; // Stop execution if balance is insufficient
     }
     // ---------------------
 
-    setActiveButtonId(pkg.id);
+    setActiveButtonId(pkg.id + (directAmount ? `-${directAmount}` : '')); // Unique ID for button state
     setIsLoading(true);
-    console.log(`Attempting to recharge package: ${pkg.name} for number: ${phoneNumber}. Cost: ${packagePrice}. Balance: ${currentBalance}`);
+    console.log(`Attempting to recharge ${rechargeLabel} for number: ${phoneNumber}. Cost: ${amountToCharge}. Balance: ${balance}`);
     toast({
       title: "بدء عملية الشحن",
-      description: `جاري شحن ${pkg.name} للرقم ${phoneNumber}...`,
+      description: `جاري شحن ${rechargeLabel} للرقم ${phoneNumber}...`,
       variant: 'default', // Use default (primary) style
     });
 
-    // --- Simulate Backend Recharge API Call ---
-    // 1. Send request to backend API with { phoneNumber, packageId: pkg.id, userId: '...' }
-    // 2. Backend verifies user, package, and performs the actual recharge via operator APIs.
-    // 3. Backend confirms success/failure and deducts balance from user's account in the database.
-    // 4. Backend returns response to the frontend.
+    // --- Call Backend Recharge API ---
+    try {
+        const response = await fetch('/api/recharge', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: user.uid,
+                phoneNumber,
+                operator: detectedOperator,
+                packageId: directAmount ? null : pkg.id, // Send null packageId for direct recharge
+                amount: directAmount ? amountToCharge : null, // Send amount only for direct recharge
+            }),
+        });
 
-    setTimeout(() => {
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            throw new Error(result.error || `فشل عملية الشحن (الحالة: ${response.status})`);
+        }
+
+        // Success
+        toast({
+            title: "نجاح العملية",
+            description: result.message || `تم شحن ${rechargeLabel} بنجاح!`,
+            variant: "default",
+        });
+
+        // Balance update is handled by the Firestore listener in useBalance hook
+        // await fetchBalance(); // Optionally force a balance refresh if listener is slow
+
+        // Optionally clear fields on success
+        // setPhoneNumber('');
+        // setDetectedOperator(null);
+        // setShowPackages(false);
+        setDirectRechargeAmount('');
+        setShowDirectRechargeInput(false);
+
+
+    } catch (error: any) {
+        console.error("Recharge API call failed:", error);
+        toast({
+            title: "فشل العملية",
+            description: error.message || `فشل الاتصال بمزود الخدمة لشحن ${rechargeLabel}. لم يتم خصم أي رصيد.`,
+            variant: "destructive",
+        });
+         // Balance state should remain unchanged due to transaction logic in API
+    } finally {
       setIsLoading(false);
       setActiveButtonId(null);
-      const isApiSuccess = Math.random() > 0.2; // Simulate API success/failure
+    }
+  };
 
-      if (isApiSuccess) {
-         // --- Deduct Balance on Frontend (Simulation) ---
-         const deducted = deductBalance(packagePrice); // Use the simulated function
-         if (deducted) {
-            toast({
-                title: "نجاح العملية",
-                description: `تم شحن ${pkg.name} بنجاح للرقم ${phoneNumber}! الرصيد المتبقي: ${currentBalance - packagePrice} ريال.`, // Show remaining balance
-                variant: "default", // Use default (primary) style for success
-            });
-             // Optionally clear phone number or reset state
-            // setPhoneNumber('');
-            // setDetectedOperator(null);
-            // setShowPackages(false);
-         } else {
-             // This case should technically not happen due to the initial check, but good for robustness
-             toast({
-                title: "خطأ في الرصيد",
-                description: `حدث خطأ أثناء خصم الرصيد.`,
-                variant: "destructive",
-            });
-         }
-         // ---------------------------------------------
-      } else {
-         toast({
-            title: "فشل العملية",
-            description: `فشل الاتصال بمزود الخدمة لشحن ${pkg.name}. لم يتم خصم أي رصيد. يرجى المحاولة لاحقاً.`,
-            variant: "destructive", // Use destructive (red) style
-        });
-      }
-    }, 1500);
+  // Handle direct recharge input changes
+  const handleDirectAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setDirectRechargeAmount(event.target.value.replace(/[^0-9]/g, ''));
+  };
+
+  // Handle submitting direct recharge amount
+  const handleDirectRechargeSubmit = () => {
+    const amount = parseInt(directRechargeAmount, 10);
+    if (isNaN(amount) || amount <= 0) {
+        toast({ title: "خطأ", description: "الرجاء إدخال مبلغ صحيح للتعبئة.", variant: "destructive" });
+        return;
+    }
+    // Find the 'direct recharge' package placeholder to pass to handleRechargeClick
+    const directRechargePkg = packagesData[detectedOperator!]?.find(p => p.id.includes('direct-recharge'));
+    if (directRechargePkg) {
+       handleRechargeClick(directRechargePkg, amount);
+    } else {
+        // Fallback if placeholder not found (should not happen with current data structure)
+         handleRechargeClick({id: 'direct_recharge_fallback', name: 'تعبئة رصيد مباشر', price: amount}, amount);
+    }
   };
 
   // Group packages by category for rendering
@@ -393,6 +429,7 @@ export default function RechargePage() {
               )}
               maxLength={15}
                dir="ltr" // Keep LTR for number input behavior
+               disabled={isPageLoading} // Disable while loading auth/balance
             />
             {/* Operator Logo - Positioned inside input field (right side) */}
             {operatorLogo && (
@@ -400,10 +437,14 @@ export default function RechargePage() {
                     <Image src={operatorLogo} alt={detectedOperator || 'Operator'} width={32} height={32} className="object-contain" />
                   </div>
             )}
+             {/* Show loading indicator if page is loading */}
+             {isPageLoading && (
+                 <Loader2 className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin text-[#007B8A]" />
+             )}
         </div>
 
          {/* Operator/Error Message */}
-         {phoneNumber.length >= 2 && !detectedOperator && (
+         {phoneNumber.length >= 2 && !detectedOperator && !isPageLoading && (
            <p className="text-center text-sm text-red-600">المشغل غير مدعوم حالياً.</p> // Destructive text color
         )}
 
@@ -412,13 +453,46 @@ export default function RechargePage() {
            <div className="mt-4">
               <h2 className="mb-3 text-center text-base font-semibold text-[#333333]">
                  <Package className="inline-block h-5 w-5 mr-2 align-middle text-[#333333]"/>
-                 باقات {detectedOperator} المتاحة
+                 {showDirectRechargeInput ? `إدخال مبلغ لـ ${detectedOperator}` : `باقات ${detectedOperator} المتاحة`}
              </h2>
                 <ScrollArea className="h-[calc(100vh-280px)]"> {/* Adjust height */}
                  {isFetchingPackages ? (
                       <div className="flex justify-center items-center p-10">
                         <Loader2 className="h-8 w-8 animate-spin text-[#007B8A]" /> {/* Teal spinner */}
                       </div>
+                 ) : showDirectRechargeInput ? (
+                      // Direct Recharge Amount Input
+                      <Card className="overflow-hidden rounded-[12px] bg-white p-4 shadow-md space-y-3">
+                          <p className="text-sm text-center text-[#666666]">أدخل المبلغ المطلوب للتعبئة المباشرة:</p>
+                          <Input
+                              type="number"
+                              placeholder="المبلغ بالريال"
+                              value={directRechargeAmount}
+                              onChange={handleDirectAmountChange}
+                              className={cn(
+                                 "h-12 rounded-lg border border-[#E0E0E0] bg-white px-4 text-lg text-center placeholder-[#9E9E9E] text-[#333333]",
+                              )}
+                              dir="ltr"
+                              disabled={isLoading}
+                           />
+                          <div className="flex gap-2">
+                             <Button
+                                 variant="outline"
+                                 onClick={() => { setShowDirectRechargeInput(false); setDirectRechargeAmount(''); }}
+                                 className="flex-1 rounded-[8px] border-[#666] text-[#666]"
+                                 disabled={isLoading}
+                             >
+                                 إلغاء
+                             </Button>
+                             <Button
+                                  className="flex-1 px-4 py-1.5 text-sm font-medium shadow-sm h-auto rounded-[8px] transition-all bg-[#FF6F3C] text-white hover:bg-[#FF6F3C]/90 active:bg-[#FF6F3C]/80"
+                                  onClick={handleDirectRechargeSubmit}
+                                  disabled={isLoading || !directRechargeAmount}
+                              >
+                                  {isLoading && activeButtonId?.startsWith('direct') ? <Loader2 className="h-4 w-4 animate-spin" /> : 'تأكيد التعبئة'}
+                              </Button>
+                           </div>
+                      </Card>
                  ) : Object.keys(groupedPackages).length > 0 ? (
                      <div className="space-y-4"> {/* Space between categories */}
                          {Object.entries(groupedPackages).map(([category, pkgs]) => (
@@ -428,41 +502,55 @@ export default function RechargePage() {
                                      <h3 className="mb-2 px-1 text-base font-medium text-[#666666]">{category}</h3>
                                  )}
                                  <div className="space-y-2"> {/* Space between packages (8px) */}
-                                     {pkgs.map((pkg) => (
-                                         // Package Card: White bg, rounded-xl (12px), shadow-md
-                                         <Card key={pkg.id} className="overflow-hidden rounded-[12px] bg-white p-3 shadow-md transition-transform duration-150 ease-in-out active:scale-[0.98] active:shadow active:translate-y-[2px]">
-                                             <div className="flex items-center justify-between gap-3">
-                                                 {/* Package details */}
-                                                 <div className="flex-1 space-y-1 text-right">
-                                                     {/* Package Name: 16px Bold, Dark grey */}
-                                                     <p className="text-base font-semibold text-[#333333]">{pkg.name}</p>
-                                                     {/* Description: Medium grey */}
-                                                     {pkg.description && <p className="text-xs text-[#666666]">{pkg.description}</p>}
-                                                     {/* Price: Teal color */}
-                                                     <p className="text-sm font-medium text-[#007B8A] flex items-center justify-end gap-1 pt-1">
-                                                         <CircleDollarSign className="h-4 w-4" />
-                                                         {typeof pkg.price === 'number' && pkg.price > 0
-                                                             ? `${pkg.price} ريال`
-                                                             : pkg.price}
-                                                     </p>
+                                     {pkgs.map((pkg) => {
+                                         const currentButtonId = pkg.id + (pkg.price === 'حسب المبلغ' ? '-input' : '');
+                                         const isCurrentButtonLoading = isLoading && activeButtonId === currentButtonId;
+                                         const isDirectRechargeOption = pkg.price === 'حسب المبلغ' || pkg.id.includes('direct-recharge');
+
+                                         return (
+                                             // Package Card: White bg, rounded-xl (12px), shadow-md
+                                             <Card key={pkg.id} className="overflow-hidden rounded-[12px] bg-white p-3 shadow-md transition-transform duration-150 ease-in-out active:scale-[0.98] active:shadow active:translate-y-[2px]">
+                                                 <div className="flex items-center justify-between gap-3">
+                                                     {/* Package details */}
+                                                     <div className="flex-1 space-y-1 text-right">
+                                                         {/* Package Name: 16px Bold, Dark grey */}
+                                                         <p className="text-base font-semibold text-[#333333]">{pkg.name}</p>
+                                                         {/* Description: Medium grey */}
+                                                         {pkg.description && <p className="text-xs text-[#666666]">{pkg.description}</p>}
+                                                         {/* Price: Teal color */}
+                                                         {!isDirectRechargeOption && (
+                                                             <p className="text-sm font-medium text-[#007B8A] flex items-center justify-end gap-1 pt-1">
+                                                                 <CircleDollarSign className="h-4 w-4" />
+                                                                 {typeof pkg.price === 'number' && pkg.price > 0
+                                                                     ? `${pkg.price.toLocaleString()} ريال`
+                                                                     : pkg.price}
+                                                             </p>
+                                                         )}
+                                                     </div>
+                                                     {/* Recharge Button: Orange bg (#FF6F3C), White text, rounded 8px */}
+                                                     <Button
+                                                         size="sm"
+                                                         className="px-4 py-1.5 text-sm font-medium shadow-sm h-auto rounded-[8px] transition-all bg-[#FF6F3C] text-white hover:bg-[#FF6F3C]/90 active:bg-[#FF6F3C]/80"
+                                                         onClick={() => {
+                                                              if (isDirectRechargeOption) {
+                                                                  setShowDirectRechargeInput(true);
+                                                                  setActiveButtonId(currentButtonId); // Set active ID for the input trigger
+                                                              } else {
+                                                                  handleRechargeClick(pkg);
+                                                              }
+                                                          }}
+                                                         disabled={isLoading || isPageLoading} // Disable if any loading is happening
+                                                     >
+                                                         {isCurrentButtonLoading ? (
+                                                             <Loader2 className="h-4 w-4 animate-spin" />
+                                                         ) : (
+                                                             isDirectRechargeOption ? 'أدخل المبلغ' : 'اشحن الآن'
+                                                         )}
+                                                     </Button>
                                                  </div>
-                                                 {/* Recharge Button: Orange bg (#FF6F3C), White text, rounded 8px */}
-                                                 <Button
-                                                     size="sm"
-                                                     // variant="accent" // Using custom class for specific color
-                                                     className="px-4 py-1.5 text-sm font-medium shadow-sm h-auto rounded-[8px] transition-all bg-[#FF6F3C] text-white hover:bg-[#FF6F3C]/90 active:bg-[#FF6F3C]/80" // Specific orange button
-                                                     onClick={() => handleRechargeClick(pkg)}
-                                                     disabled={isLoading && activeButtonId === pkg.id}
-                                                 >
-                                                     {(isLoading && activeButtonId === pkg.id) ? (
-                                                         <Loader2 className="h-4 w-4 animate-spin" />
-                                                     ) : (
-                                                         'اشحن الآن'
-                                                     )}
-                                                 </Button>
-                                             </div>
-                                         </Card>
-                                     ))}
+                                             </Card>
+                                         );
+                                     })}
                                  </div>
                              </div>
                          ))}
@@ -478,4 +566,3 @@ export default function RechargePage() {
     </div>
   );
 }
-

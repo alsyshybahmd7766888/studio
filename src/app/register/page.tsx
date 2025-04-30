@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation'; // Import useRouter
+import { useRouter } from 'next/navigation';
 import {
   User,
   Store,
@@ -12,199 +12,260 @@ import {
   Eye,
   EyeOff,
   UploadCloud,
-  CheckCircle, // Updated Address Icon
+  CheckCircle,
+  Loader2, // Import Loader2
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'; // Removed TabsContent as it's not used here
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast'; // Import useToast
+import { useToast } from '@/hooks/use-toast';
+import { auth, db } from '@/lib/firebase'; // Import Firebase auth and db
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
+// import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Optional: For storing ID images
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const [isLoading, setIsLoading] = React.useState(false); // Loading state
   const [formData, setFormData] = React.useState({
     fullName: '',
     businessActivity: '',
-    phoneNumber: '',
+    phoneNumber: '', // Used for display/contact, maybe for verification later
     address: '',
-    username: '',
+    username: '', // Will be used as email for Firebase Auth
     password: '',
     confirmPassword: '',
   });
-  const [idType, setIdType] = React.useState('personal-id'); // State for selected ID type
+  const [idType, setIdType] = React.useState('personal-id');
   const [idImageFront, setIdImageFront] = React.useState<File | null>(null);
   const [idImageBack, setIdImageBack] = React.useState<File | null>(null);
   const frontImageRef = React.useRef<HTMLInputElement>(null);
   const backImageRef = React.useRef<HTMLInputElement>(null);
 
-  const router = useRouter(); // Initialize useRouter
-  const { toast } = useToast(); // Initialize useToast
+  const router = useRouter();
+  const { toast } = useToast();
+  // const storage = getStorage(); // Optional: Initialize Firebase Storage
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+   // --- Input Change Handler ---
+   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
+  // --- File Change Handler ---
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
       if (e.target.files && e.target.files[0]) {
+          const file = e.target.files[0];
+          // Basic validation (type, size)
+          if (!file.type.startsWith('image/')) {
+              toast({ title: "خطأ", description: "الرجاء اختيار ملف صورة.", variant: "destructive" });
+              return;
+          }
+          if (file.size > 5 * 1024 * 1024) { // 5MB limit example
+              toast({ title: "خطأ", description: "حجم الصورة كبير جداً (الحد الأقصى 5MB).", variant: "destructive" });
+              return;
+          }
+
           if (side === 'front') {
-              setIdImageFront(e.target.files[0]);
-              console.log('Front image selected:', e.target.files[0].name);
+              setIdImageFront(file);
+              console.log('Front image selected:', file.name);
           } else {
-              setIdImageBack(e.target.files[0]);
-              console.log('Back image selected:', e.target.files[0].name);
+              setIdImageBack(file);
+              console.log('Back image selected:', file.name);
           }
       }
   };
 
-  const handleRegister = async () => {
-    console.log('Registration attempt with data:', { ...formData, idType });
-    console.log('Front Image:', idImageFront?.name);
-    console.log('Back Image:', idImageBack?.name);
+   // --- Format Email for Firebase ---
+   // Consistent with login page logic
+   const formatEmail = (input: string): string => {
+       if (input.includes('@')) return input;
+       // return `${input}@4now.app`; // Use your domain or logic
+       // Using username directly might fail if it's not a valid email format
+       // Consider prompting for an actual email or using phone auth if username isn't email
+       return input; // WARNING: This might require custom auth or fail standard email/password
+   };
 
-    // --- Basic Client-Side Validation ---
+  // --- Registration Handler ---
+  const handleRegister = async () => {
+    setIsLoading(true);
+    console.log('Registration attempt with data:', { ...formData, idType });
+
+    // --- Validation ---
     if (formData.password !== formData.confirmPassword) {
-      toast({
-        title: 'خطأ في التسجيل',
-        description: 'كلمتا المرور غير متطابقتين.',
-        variant: 'destructive',
-      });
+      toast({ title: 'خطأ', description: 'كلمتا المرور غير متطابقتين.', variant: 'destructive' });
+      setIsLoading(false);
       return;
     }
-    if (!formData.fullName || !formData.phoneNumber || !formData.username || !formData.password || !idImageFront) {
-         toast({
-            title: 'خطأ في التسجيل',
-            description: 'يرجى ملء جميع الحقول الإلزامية وتحميل صورة الوثيقة الأمامية.',
-            variant: 'destructive',
-         });
+    if (!formData.fullName || !formData.phoneNumber || !formData.username || !formData.password) {
+         toast({ title: 'خطأ', description: 'يرجى ملء جميع الحقول الإلزامية (الاسم، الهاتف، اسم الدخول، كلمة المرور).', variant: 'destructive' });
+         setIsLoading(false);
+         return;
+     }
+      // Temporarily making ID image optional for testing, enforce later
+     // if (!idImageFront) {
+     //     toast({ title: 'خطأ', description: 'يرجى تحميل صورة الوثيقة الأمامية.', variant: 'destructive' });
+     //     setIsLoading(false);
+     //     return;
+     // }
+      if (formData.password.length < 6) {
+         toast({ title: 'خطأ', description: 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.', variant: 'destructive' });
+         setIsLoading(false);
          return;
      }
 
-    // --- Simulate Backend Registration & OCR ---
-    // 1. Send formData and image files (idImageFront, idImageBack) to your backend API.
-    // 2. Backend saves user data (potentially pending verification).
-    // 3. Backend uses an OCR (Optical Character Recognition) service (like Google Cloud Vision AI, AWS Textract)
-    //    to extract text from the uploaded ID image (idImageFront).
-    // 4. Backend compares the extracted name from OCR with `formData.fullName`.
-    // 5. If names match (with some tolerance for variations):
-    //    - Mark the account as verified (or partially verified).
-    //    - Generate a temporary password or send the user's chosen password via SMS (using services like Twilio, Vonage).
-    //    - Send SMS: "تم قبول حسابك. كلمة المرور: [password]"
-    // 6. If names don't match or OCR fails:
-    //    - Keep account pending manual review or reject registration.
-    //    - Inform the user.
+     // --- Format Email ---
+     const email = formatEmail(formData.username);
+     // Basic email format check (optional but recommended if using email/password)
+     // if (!/\S+@\S+\.\S+/.test(email)) {
+     //    toast({ title: 'خطأ', description: 'اسم الدخول يجب أن يكون بصيغة بريد إلكتروني صحيحة.', variant: 'destructive'});
+     //    setIsLoading(false);
+     //    return;
+     // }
 
-    toast({
-      title: 'جاري معالجة التسجيل...',
-      description: 'يتم التحقق من البيانات ورفع الوثائق.',
-      variant: 'default', // Use default (primary) style
-    });
+    toast({ title: 'جاري التسجيل...', description: 'يتم إنشاء حسابك.', variant: 'default' });
 
-    // Simulate API call delay and success/failure
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      // 1. Create User in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, formData.password);
+      const user = userCredential.user;
+      console.log('Firebase Auth user created:', user.uid);
 
-    // Simulate OCR and validation result
-    const isMatch = Math.random() > 0.3; // Simulate 70% success rate for name match
+       // --- Optional: Upload ID Images to Firebase Storage ---
+       let frontImageUrl: string | null = null;
+       // let backImageUrl: string | null = null;
+       // if (idImageFront) {
+       //   const frontImageRefPath = `user_ids/${user.uid}/front_${idImageFront.name}`;
+       //   const frontStorageRef = ref(storage, frontImageRefPath);
+       //   await uploadBytes(frontStorageRef, idImageFront);
+       //   frontImageUrl = await getDownloadURL(frontStorageRef);
+       //   console.log('Front image uploaded:', frontImageUrl);
+       // }
+       // if (idImageBack) { // Upload back image similarly if needed }
 
-    if (isMatch) {
+
+      // 2. Store Additional User Info in Firestore
+      const userDocRef = doc(db, 'users', user.uid); // Collection 'users', Document ID = user.uid
+      await setDoc(userDocRef, {
+        uid: user.uid,
+        email: user.email, // Store the email used for auth
+        fullName: formData.fullName,
+        businessActivity: formData.businessActivity,
+        phoneNumber: formData.phoneNumber, // Store phone number
+        address: formData.address,
+        idType: idType,
+        // idFrontImageUrl: frontImageUrl, // Store image URL if uploaded
+        // idBackImageUrl: backImageUrl,   // Store image URL if uploaded
+        createdAt: new Date(), // Timestamp
+        // Add verification status if implementing OCR/manual check later
+        // verificationStatus: 'pending',
+      });
+      console.log('User data saved to Firestore');
+
+       // 3. Create Initial Balance Document (using 0)
+       const balanceDocRef = doc(db, 'balances', user.uid);
+       await setDoc(balanceDocRef, { amount: 0 });
+       console.log('Initial balance document created.');
+
+
+      // --- Success ---
       toast({
         title: 'نجاح التسجيل',
-        description: 'تم قبول حسابك بنجاح! تم إرسال كلمة المرور إلى رقم هاتفك.',
-        variant: 'default', // Use default (primary) style for success
+        description: 'تم إنشاء حسابك بنجاح! يمكنك الآن تسجيل الدخول.',
+        variant: 'default',
       });
-      // Redirect to login page after successful registration
-      router.push('/login');
-    } else {
+      router.push('/login'); // Redirect to login page
+
+    } catch (error: any) {
+      console.error('Registration failed:', error);
+      let errorMessage = "حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.";
+       if (error.code === 'auth/email-already-in-use') {
+           errorMessage = "اسم الدخول (البريد الإلكتروني) مستخدم بالفعل.";
+       } else if (error.code === 'auth/invalid-email') {
+           errorMessage = "صيغة اسم الدخول (البريد الإلكتروني) غير صحيحة.";
+       } else if (error.code === 'auth/weak-password') {
+           errorMessage = "كلمة المرور ضعيفة جداً.";
+       }
       toast({
-        title: 'فشل التحقق',
-        description: 'لم نتمكن من مطابقة الاسم في الوثيقة مع الاسم المدخل. يرجى المحاولة مرة أخرى أو مراجعة الدعم.',
+        title: 'فشل التسجيل',
+        description: errorMessage,
         variant: 'destructive',
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    // Background: Emerald Green (#00A651)
-    <div className="flex min-h-screen flex-col items-center bg-[#00A651] px-4 pt-[32px] text-white">
-      {/* Status Bar Area (Placeholder) */}
+    // Background: Teal (#007B8A)
+    <div className="flex min-h-screen flex-col items-center bg-primary px-4 pt-[32px] text-primary-foreground">
+      {/* Status Bar Area */}
       <div className="h-[24px] w-full"></div>
 
-       {/* Logo Header - Same as login */}
+       {/* Logo Header */}
       <div className="mb-8 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-white shadow-lg">
          <span className="text-3xl font-bold">
-           <span className="text-[#00A651]">٤</span> {/* Use primary green */}
-           <span className="text-[#FF6F3C]">Now</span> {/* Use accent orange */}
+           <span className="text-primary">٤</span>
+           <span className="text-accent">Now</span>
          </span>
       </div>
 
-       {/* Card Container - White bg, rounded 24px, dark grey text */}
-      <div className="w-full max-w-md rounded-[24px] bg-white p-4 shadow-xl text-[#333333]">
+       {/* Card Container */}
+      <div className="w-full max-w-md rounded-[24px] bg-card p-4 shadow-xl text-card-foreground">
         {/* Personal Information Section */}
         <div className="mb-4">
            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
-             <Separator className="flex-1 bg-[#E0E0E0]" /> {/* Lighter separator */}
-             <h2 className="whitespace-nowrap text-lg font-medium text-[#333333]">
+             <Separator className="flex-1 bg-border" />
+             <h2 className="whitespace-nowrap text-lg font-medium text-foreground">
                البيانات الشخصية
              </h2>
-             <Separator className="flex-1 bg-[#E0E0E0]" />
+             <Separator className="flex-1 bg-border" />
            </div>
 
-           <div className="mt-3 space-y-3"> {/* 12px gap */}
-            {/* Full Name */}
+           <div className="mt-3 space-y-3">
+             {/* Full Name */}
              <div className="relative">
               <Input
-                type="text"
-                name="fullName" // Add name attribute
-                placeholder="الاسم الرباعي مع اللقب"
-                value={formData.fullName}
-                onChange={handleInputChange}
-                className="h-12 rounded-lg border border-[#E0E0E0] bg-white pr-10 text-base placeholder-[#9E9E9E] text-[#333333]" // Specific styles
+                type="text" name="fullName" placeholder="الاسم الرباعي مع اللقب"
+                value={formData.fullName} onChange={handleInputChange} disabled={isLoading}
+                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
                 dir="rtl"
               />
-              <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" /> {/* Icon color */}
+              <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
             </div>
              {/* Business Activity */}
             <div className="relative">
               <Input
-                type="text"
-                name="businessActivity" // Add name attribute
-                placeholder="النشاط التجاري"
-                value={formData.businessActivity}
-                onChange={handleInputChange}
-                className="h-12 rounded-lg border border-[#E0E0E0] bg-white pr-10 text-base placeholder-[#9E9E9E] text-[#333333]"
+                type="text" name="businessActivity" placeholder="النشاط التجاري"
+                value={formData.businessActivity} onChange={handleInputChange} disabled={isLoading}
+                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
                 dir="rtl"
               />
-              <Store className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
+              <Store className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
             </div>
              {/* Phone Number */}
             <div className="relative">
               <Input
-                type="tel"
-                name="phoneNumber" // Add name attribute
-                placeholder="رقم الهاتف"
-                value={formData.phoneNumber}
-                onChange={handleInputChange}
-                className="h-12 rounded-lg border border-[#E0E0E0] bg-white pr-10 text-base placeholder-[#9E9E9E] text-[#333333]"
+                type="tel" name="phoneNumber" placeholder="رقم الهاتف"
+                value={formData.phoneNumber} onChange={handleInputChange} disabled={isLoading}
+                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
                 dir="rtl"
               />
-              <Phone className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
+              <Phone className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
             </div>
              {/* Address */}
             <div className="relative">
               <Input
-                type="text"
-                name="address" // Add name attribute
-                placeholder="العنوان"
-                value={formData.address}
-                onChange={handleInputChange}
-                className="h-12 rounded-lg border border-[#E0E0E0] bg-white pr-10 text-base placeholder-[#9E9E9E] text-[#333333]"
+                type="text" name="address" placeholder="العنوان"
+                value={formData.address} onChange={handleInputChange} disabled={isLoading}
+                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
                 dir="rtl"
               />
-              {/* Using CheckCircle as per design image */}
-              <CheckCircle className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
+              <CheckCircle className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
             </div>
           </div>
         </div>
@@ -212,66 +273,51 @@ export default function RegisterPage() {
         {/* Login Details Section */}
         <div className="mb-4">
            <div className="flex items-center justify-center space-x-2 rtl:space-x-reverse">
-             <Separator className="flex-1 bg-[#E0E0E0]" />
-             <h2 className="whitespace-nowrap text-lg font-medium text-[#333333]">
+             <Separator className="flex-1 bg-border" />
+             <h2 className="whitespace-nowrap text-lg font-medium text-foreground">
                بيانات الدخول
              </h2>
-             <Separator className="flex-1 bg-[#E0E0E0]" />
+             <Separator className="flex-1 bg-border" />
            </div>
 
            <div className="mt-3 space-y-3">
-            {/* Username */}
+            {/* Username (Email) */}
             <div className="relative">
               <Input
-                type="text"
-                name="username" // Add name attribute
-                placeholder="اسم الدخول أو رقم الهاتف"
-                value={formData.username}
-                onChange={handleInputChange}
-                className="h-12 rounded-lg border border-[#E0E0E0] bg-white pr-10 text-base placeholder-[#9E9E9E] text-[#333333]"
+                type="text" name="username" placeholder="اسم الدخول (بريد إلكتروني أو رقم هاتف)"
+                value={formData.username} onChange={handleInputChange} disabled={isLoading}
+                className="h-12 rounded-lg border border-border bg-input pr-10 text-base placeholder:text-muted-foreground text-foreground"
                 dir="rtl"
               />
-               <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
+               <User className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
             </div>
             {/* Password */}
             <div className="relative">
               <Input
-                type={showPassword ? 'text' : 'password'}
-                name="password" // Add name attribute
-                placeholder="كلمة المرور"
-                value={formData.password}
-                onChange={handleInputChange}
-                className="h-12 rounded-lg border border-[#E0E0E0] bg-white px-10 text-base placeholder-[#9E9E9E] text-[#333333]" // Padding left and right for icons
+                type={showPassword ? 'text' : 'password'} name="password" placeholder="كلمة المرور (6+ أحرف)"
+                value={formData.password} onChange={handleInputChange} disabled={isLoading}
+                className="h-12 rounded-lg border border-border bg-input px-10 text-base placeholder:text-muted-foreground text-foreground"
                 dir="rtl"
               />
-              <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
-              <button
-                 type="button"
-                 onClick={() => setShowPassword(!showPassword)}
-                 className="absolute left-3 top-1/2 -translate-y-1/2 transform text-[#B0B0B0] hover:text-[#555555]" // Adjusted hover color
-                 aria-label={showPassword ? "إخفاء كلمة المرور" : "إظهار كلمة المرور"}
-              >
+              <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+              <button type="button" onClick={() => setShowPassword(!showPassword)} disabled={isLoading}
+                 className="absolute left-3 top-1/2 -translate-y-1/2 transform text-muted-foreground hover:text-foreground"
+                 aria-label={showPassword ? "إخفاء" : "إظهار"}>
                 {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
              {/* Confirm Password */}
              <div className="relative">
               <Input
-                 type={showConfirmPassword ? 'text' : 'password'}
-                 name="confirmPassword" // Add name attribute
-                 placeholder="تأكيد كلمة المرور"
-                 value={formData.confirmPassword}
-                 onChange={handleInputChange}
-                 className="h-12 rounded-lg border border-[#E0E0E0] bg-white px-10 text-base placeholder-[#9E9E9E] text-[#333333]"
+                 type={showConfirmPassword ? 'text' : 'password'} name="confirmPassword" placeholder="تأكيد كلمة المرور"
+                 value={formData.confirmPassword} onChange={handleInputChange} disabled={isLoading}
+                 className="h-12 rounded-lg border border-border bg-input px-10 text-base placeholder:text-muted-foreground text-foreground"
                  dir="rtl"
               />
-              <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-[#B0B0B0]" />
-               <button
-                 type="button"
-                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                 className="absolute left-3 top-1/2 -translate-y-1/2 transform text-[#B0B0B0] hover:text-[#555555]"
-                 aria-label={showConfirmPassword ? "إخفاء تأكيد كلمة المرور" : "إظهار تأكيد كلمة المرور"}
-              >
+              <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
+               <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} disabled={isLoading}
+                 className="absolute left-3 top-1/2 -translate-y-1/2 transform text-muted-foreground hover:text-foreground"
+                 aria-label={showConfirmPassword ? "إخفاء" : "إظهار"}>
                 {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
               </button>
             </div>
@@ -279,121 +325,85 @@ export default function RegisterPage() {
         </div>
 
         {/* Document Type Tabs */}
-        {/* Using value prop for controlled component */}
         <Tabs value={idType} onValueChange={setIdType} className="mt-4 w-full">
-           {/* Use #EEEEEE or similar light grey for the list background */}
-           <TabsList className="grid h-auto w-full grid-cols-4 gap-2 bg-[#EEEEEE] p-1">
-            {/* Active Tab: Red bg (#FF3B30), white text */}
-            {/* Inactive Tab: White bg, red border, red text */}
-             <TabsTrigger
-              value="personal-id"
-              className={cn(
-                 "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/50 focus-visible:ring-offset-2",
-                 // Active state: Red bg, White text
-                 "data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white data-[state=active]:shadow-sm",
-                 // Inactive state: White bg, Red border, Red text
-                 "data-[state=inactive]:bg-white data-[state=inactive]:text-[#FF3B30] data-[state=inactive]:border data-[state=inactive]:border-[#FF3B30] data-[state=inactive]:hover:bg-[#FF3B30]/10"
-              )}
-            >
-              بطاقة شخصية
-            </TabsTrigger>
-             {/* Repeat styling for other tabs */}
-            <TabsTrigger
-              value="passport"
-              className={cn(
-                 "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/50 focus-visible:ring-offset-2",
-                 "data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white data-[state=active]:shadow-sm",
-                 "data-[state=inactive]:bg-white data-[state=inactive]:text-[#FF3B30] data-[state=inactive]:border data-[state=inactive]:border-[#FF3B30] data-[state=inactive]:hover:bg-[#FF3B30]/10"
-              )}
-            >
-              جواز
-            </TabsTrigger>
-             <TabsTrigger
-              value="commercial-reg"
-               className={cn(
-                 "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/50 focus-visible:ring-offset-2",
-                 "data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white data-[state=active]:shadow-sm",
-                 "data-[state=inactive]:bg-white data-[state=inactive]:text-[#FF3B30] data-[state=inactive]:border data-[state=inactive]:border-[#FF3B30] data-[state=inactive]:hover:bg-[#FF3B30]/10"
-              )}
-            >
-              سجل تجاري
-            </TabsTrigger>
-            <TabsTrigger
-              value="family-card"
-               className={cn(
-                 "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/50 focus-visible:ring-offset-2",
-                 "data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white data-[state=active]:shadow-sm",
-                 "data-[state=inactive]:bg-white data-[state=inactive]:text-[#FF3B30] data-[state=inactive]:border data-[state=inactive]:border-[#FF3B30] data-[state=inactive]:hover:bg-[#FF3B30]/10"
-              )}
-            >
-              بطاقة عائلية
-            </TabsTrigger>
+           <TabsList className="grid h-auto w-full grid-cols-4 gap-2 bg-muted p-1">
+             {/* Active Tab: Accent bg, Accent-foreground text */}
+             {/* Inactive Tab: Card bg, Destructive text (red), Destructive border */}
+             {(['personal-id', 'passport', 'commercial-reg', 'family-card'] as const).map((type) => (
+                 <TabsTrigger key={type} value={type} disabled={isLoading}
+                    className={cn(
+                        "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/50 focus-visible:ring-offset-2",
+                        "data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm",
+                        "data-[state=inactive]:bg-card data-[state=inactive]:text-destructive data-[state=inactive]:border data-[state=inactive]:border-destructive data-[state=inactive]:hover:bg-destructive/10"
+                    )}
+                 >
+                    { {
+                        'personal-id': 'بطاقة شخصية',
+                        'passport': 'جواز',
+                        'commercial-reg': 'سجل تجاري',
+                        'family-card': 'بطاقة عائلية'
+                    }[type] }
+                 </TabsTrigger>
+             ))}
           </TabsList>
-          {/* No TabsContent needed as image upload is always visible */}
         </Tabs>
 
         {/* Image Upload Placeholders */}
-        <div className="mt-3 grid grid-cols-2 gap-3"> {/* 12px gap */}
-           {/* Front Image Upload */}
+        <div className="mt-3 grid grid-cols-2 gap-3">
+            {/* Front Image */}
             <div
-                className="relative aspect-square w-full cursor-pointer rounded-lg bg-[#EEEEEE] flex flex-col items-center justify-center border-2 border-dashed border-[#CCCCCC] hover:border-[#009944]/50 hover:bg-[#E5E5E5]"
-                onClick={() => frontImageRef.current?.click()}
+                className={cn(
+                    "relative aspect-square w-full rounded-lg bg-muted flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/80",
+                    !isLoading && "cursor-pointer" // Only show cursor if not loading
+                )}
+                onClick={() => !isLoading && frontImageRef.current?.click()}
             >
                  {idImageFront ? (
                     <img src={URL.createObjectURL(idImageFront)} alt="Preview Front" className="h-full w-full object-cover rounded-lg" />
                  ) : (
                     <>
-                         <UploadCloud className="h-10 w-10 text-[#CCCCCC]" />
-                         <span className="mt-1 text-xs text-[#666666]">الوجه الأمامي</span>
+                         <UploadCloud className="h-10 w-10 text-muted-foreground/50" />
+                         <span className="mt-1 text-xs text-muted-foreground">الوجه الأمامي*</span>
                      </>
                  )}
-                 <input
-                    ref={frontImageRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, 'front')}
-                    className="hidden"
-                    aria-label="Upload front ID image"
-                 />
+                 <input ref={frontImageRef} type="file" accept="image/*" disabled={isLoading}
+                    onChange={(e) => handleFileChange(e, 'front')} className="hidden" aria-label="Upload front ID" />
             </div>
-            {/* Back Image Upload */}
+            {/* Back Image */}
             <div
-                className="relative aspect-square w-full cursor-pointer rounded-lg bg-[#EEEEEE] flex flex-col items-center justify-center border-2 border-dashed border-[#CCCCCC] hover:border-[#009944]/50 hover:bg-[#E5E5E5]"
-                onClick={() => backImageRef.current?.click()}
+                 className={cn(
+                    "relative aspect-square w-full rounded-lg bg-muted flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/80",
+                     !isLoading && "cursor-pointer"
+                 )}
+                onClick={() => !isLoading && backImageRef.current?.click()}
             >
                 {idImageBack ? (
                      <img src={URL.createObjectURL(idImageBack)} alt="Preview Back" className="h-full w-full object-cover rounded-lg" />
                 ) : (
                      <>
-                        <UploadCloud className="h-10 w-10 text-[#CCCCCC]" />
-                        <span className="mt-1 text-xs text-[#666666]">الوجه الخلفي (اختياري)</span>
+                        <UploadCloud className="h-10 w-10 text-muted-foreground/50" />
+                        <span className="mt-1 text-xs text-muted-foreground">الوجه الخلفي (اختياري)</span>
                      </>
                 )}
-                 <input
-                    ref={backImageRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => handleFileChange(e, 'back')}
-                    className="hidden"
-                    aria-label="Upload back ID image"
-                 />
+                 <input ref={backImageRef} type="file" accept="image/*" disabled={isLoading}
+                    onChange={(e) => handleFileChange(e, 'back')} className="hidden" aria-label="Upload back ID" />
             </div>
         </div>
 
-         {/* Register Button - Use primary green (#009944) */}
+         {/* Register Button */}
         <Button
-           className="mt-4 h-12 w-full rounded-lg bg-[#009944] text-base font-medium text-white hover:bg-[#008833] active:bg-[#007722]" // Specific green
-           onClick={handleRegister} // Use the handler function
+           className="mt-4 h-12 w-full rounded-lg bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 active:bg-primary/80"
+           onClick={handleRegister}
+           disabled={isLoading} // Disable button while loading
         >
-          تسجيل
+          {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'تسجيل'}
         </Button>
 
         {/* Login Link */}
-        <p className="mt-3 text-center text-sm font-light text-[#9E9E9E]"> {/* Placeholder grey */}
+        <p className="mt-3 text-center text-sm font-light text-muted-foreground">
           هل لديك حساب؟{' '}
-          <Link href="/login" passHref>
-            {/* Green link text */}
-            <span className="cursor-pointer font-medium text-[#009944] hover:underline hover:text-[#007722]">
+          <Link href="/login" passHref className={cn(isLoading && "pointer-events-none opacity-50")}>
+            <span className="cursor-pointer font-medium text-primary hover:underline hover:text-primary/80">
               قم بالدخول
             </span>
           </Link>
@@ -402,8 +412,7 @@ export default function RegisterPage() {
       </div>
 
        {/* Footer */}
-      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-white"> {/* White text */}
-         {/* Removed contact info */}
+      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-primary-foreground/80">
          برمجة وتصميم (يمن روبوت)
       </footer>
     </div>

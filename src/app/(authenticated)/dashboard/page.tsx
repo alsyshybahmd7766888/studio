@@ -27,6 +27,7 @@ import {
   Bell,         // Icon for Notifications
   Wifi,         // Icon for WiFi Networks
   LogOut,       // Icon for Logout
+  Loader2, // Import Loader2 for balance loading
 } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -42,8 +43,8 @@ import {
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
-// import { useBalance } from '@/hooks/use-balance'; // Import balance context hook if created
-// import { useAuth } from '@/hooks/use-auth'; // Import auth context hook if created
+import { useBalance } from '@/hooks/useBalance'; // Import balance context hook
+import { useAuth } from '@/hooks/useAuth'; // Import auth context hook
 
 // Custom SimCard Icon (Inline SVG) - Reusable component
 const SimCardIcon = () => (
@@ -85,25 +86,18 @@ const dropdownMenuItems = [
 
 export default function DashboardPage() {
   const pathname = usePathname();
-  // const { balance } = useBalance(); // Get balance from context
-  // const { logout } = useAuth(); // Get logout function if using context
+  const { balance, loading: balanceLoading } = useBalance(); // Get balance and loading state from context
+  const { user, userData, loading: authLoading, logout } = useAuth(); // Get user, logout function, and loading state
   const router = useRouter(); // Use router for logout redirect
 
-  // --- Simulate Balance State ---
-  const [currentBalance, setCurrentBalance] = React.useState(0); // Initial balance 0 as requested
-  // In a real app, fetch balance from backend here using useEffect
-  // ---------------------------------------------------------------
+  // Combine loading states
+  const isLoading = authLoading || balanceLoading;
 
-  // Determine which balance to display
-  const displayBalance = currentBalance; // Using local state for now
-
-  const handleLogout = () => {
+  const handleLogout = async () => {
       console.log('Logout clicked!');
-      // if (logout) {
-      //     logout(); // Call context logout function
-      // }
-      // Simulate logout action
-      router.push('/login'); // Redirect to login page
+      await logout(); // Call context logout function
+      // Redirect happens automatically if layout structure correctly handles auth state
+      // router.push('/login'); // Or manually redirect if needed
   };
 
 
@@ -166,22 +160,26 @@ export default function DashboardPage() {
         <div className="flex flex-col items-center text-center">
           <div className="flex items-center gap-1.5">
             <Wallet className="h-5 w-5 opacity-90" />
-            {/* Display the balance dynamically */}
-            <span className="text-lg font-semibold">رصيدي: {displayBalance.toLocaleString()}</span>
+            {/* Display the balance dynamically, show loader if loading */}
+            <span className="text-lg font-semibold">
+                رصيدي: {isLoading ? <Loader2 className="inline h-4 w-4 animate-spin" /> : balance.toLocaleString()}
+            </span>
           </div>
         </div>
 
         {/* User Info & Avatar - Use primary foreground */}
         <div className="flex items-center gap-3">
           <div className="text-right">
-             {/* Updated username text */}
-             <div className="text-sm font-medium">اسم حساب المستخدم</div>
+             {/* Updated username text from userData or fallback */}
+             <div className="text-sm font-medium">{isLoading ? '...' : (userData?.fullName || 'اسم حساب المستخدم')}</div>
              {/* Account number removed as requested */}
           </div>
            {/* Avatar: White border */}
           <Avatar className="h-10 w-10 border-2 border-primary-foreground/80">
-             <AvatarImage src="https://picsum.photos/40/40?grayscale" alt="اسم حساب المستخدم" />
-             <AvatarFallback>أح</AvatarFallback> {/* Placeholder initials */}
+             {/* Use a placeholder image or a user-specific one if available */}
+             <AvatarImage src={user?.photoURL || `https://picsum.photos/seed/${user?.uid || 'default'}/40/40?grayscale`} alt={userData?.fullName || 'User'} />
+             {/* Fallback initials */}
+             <AvatarFallback>{userData?.fullName ? userData.fullName.substring(0, 2).toUpperCase() : 'أح'}</AvatarFallback>
           </Avatar>
         </div>
       </header>
