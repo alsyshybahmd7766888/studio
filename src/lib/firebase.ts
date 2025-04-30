@@ -1,31 +1,18 @@
 // src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from "firebase/app"; // Added getApp back
+import { initializeApp, getApps, getApp } from "firebase/app"; // Keep getApp
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 // Import other Firebase services as needed, e.g., getStorage
 
-// These variables MUST be defined in your .env.local file
-// Copy them from your Firebase project settings
+// Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!, // Updated domain if needed
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
-  // measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Optional
+  apiKey: "AIzaSyDU6drUk09IvFY2jX30KBeFuSDV3O1L2k4",
+  authDomain: "easy-recharge-cx0ki.firebaseapp.com",
+  projectId: "easy-recharge-cx0ki",
+  storageBucket: "easy-recharge-cx0ki.firebasestorage.app",
+  messagingSenderId: "474217949052",
+  appId: "1:474217949052:web:541c612404aa398df3e6f9"
 };
-
-// Basic check to see if config values are present
-// Remove console error during development as it can be noisy
-// if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("YOUR_")) {
-//   console.error("Firebase API Key is missing or is a placeholder. Please check your .env.local file.");
-//   // Throw error only if in production maybe?
-//   // if (process.env.NODE_ENV === 'production') {
-//   //   throw new Error("Firebase configuration is missing or invalid.");
-//   // }
-// }
-
 
 // Initialize Firebase
 let app;
