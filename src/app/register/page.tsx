@@ -80,17 +80,20 @@ export default function RegisterPage() {
       }
   };
 
-   // --- Format Email for Firebase ---
-   // Consistent with login page logic
+    // --- Format Email for Firebase ---
+   // Convert username (potentially phone number) to the expected email format
    const formatEmail = (input: string): string => {
-       if (input.includes('@')) return input;
-       // return `${input}@4now.app`; // Use your domain or logic
-       // Using username directly might fail if it's not a valid email format
-       // Consider prompting for an actual email or using phone auth if username isn't email
-       // Using phone number as email might require specific Firebase setup (e.g., custom claims or linking)
-       // For standard Email/Password, the username MUST be a valid email address.
-       // Let's assume the user enters their email in the 'username' field for now.
-       return input;
+     if (input.includes('@')) {
+       return input; // Already an email
+     }
+     // Assume it's a phone number and format it
+     // Ensure this matches the logic in LoginPage
+     const phoneRegex = /^\d+$/;
+     if (phoneRegex.test(input)) {
+        return `${input}@4now.app`; // Use your domain
+     }
+     // Return as is if not email or phone format (will likely fail auth)
+     return input;
    };
 
   // --- Registration Handler ---
@@ -123,9 +126,13 @@ export default function RegisterPage() {
 
      // --- Format Email ---
      const email = formatEmail(formData.username);
+     console.log('Formatted email for registration:', email);
      // Basic email format check - Crucial for Email/Password provider
+     // Re-checking here to ensure consistency
      if (!/\S+@\S+\.\S+/.test(email)) {
-        toast({ title: 'خطأ', description: 'اسم الدخول يجب أن يكون بصيغة بريد إلكتروني صحيحة.', variant: 'destructive'});
+        // If formatting failed or original input was bad, show error
+        // Update the message to be clearer if username is expected to be phone/email
+        toast({ title: 'خطأ', description: 'اسم الدخول يجب أن يكون بريد إلكتروني صحيح أو رقم هاتف.', variant: 'destructive'});
         setIsLoading(false);
         return;
      }
@@ -158,7 +165,8 @@ export default function RegisterPage() {
       const userDocRef = doc(db, 'users', user.uid); // Collection 'users', Document ID = user.uid
       await setDoc(userDocRef, {
         uid: user.uid,
-        email: user.email, // Store the email used for auth
+        email: user.email, // Store the email used for auth (which might be phone@domain.com)
+        usernameInput: formData.username, // Store the original username input
         fullName: formData.fullName,
         businessActivity: formData.businessActivity,
         phoneNumber: formData.phoneNumber, // Store phone number
@@ -213,16 +221,16 @@ export default function RegisterPage() {
   };
 
   return (
-    // Background: Teal (#007B8A) - Reverted based on user request
-    <div className="flex min-h-screen flex-col items-center bg-[#00A651] px-4 pt-[32px] text-primary-foreground">
+    // Background: Primary color (#007B8A)
+    <div className="flex min-h-screen flex-col items-center bg-primary px-4 pt-[32px] text-primary-foreground">
       {/* Status Bar Area */}
       <div className="h-[24px] w-full"></div>
 
        {/* Logo Header */}
       <div className="mb-8 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-white shadow-lg">
          <span className="text-3xl font-bold">
-           <span className="text-[#00A651]">٤</span> {/* Use primary color */}
-           <span className="text-[#FF6F3C]">Now</span> {/* Use accent color */}
+           <span className="text-primary">٤</span> {/* Use primary color */}
+           <span className="text-accent">Now</span> {/* Use accent color */}
          </span>
       </div>
 
@@ -294,11 +302,11 @@ export default function RegisterPage() {
            </div>
 
            <div className="mt-3 space-y-3">
-            {/* Username (Email) */}
+            {/* Username (Email/Phone) */}
             <div className="relative">
               <Input
-                type="text" // Use text, validation ensures it's email format
-                name="username" placeholder="اسم الدخول (بريد إلكتروني)" // Specify email format expected
+                type="text" // Use text, validation ensures it's email/phone format
+                name="username" placeholder="اسم الدخول (بريد إلكتروني أو رقم الهاتف)" // Clarify expected input
                 value={formData.username} onChange={handleInputChange} disabled={isLoading}
                 className="h-12 rounded-lg border border-[#E0E0E0] bg-[#F9F9F9] pr-10 text-base placeholder:text-[#9E9E9E] text-[#333333]"
                 dir="rtl" // Keep RTL for placeholder, input direction might depend on language settings
@@ -346,9 +354,9 @@ export default function RegisterPage() {
              {(['personal-id', 'passport', 'commercial-reg', 'family-card'] as const).map((type) => (
                  <TabsTrigger key={type} value={type} disabled={isLoading}
                     className={cn(
-                        "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF3B30]/50 focus-visible:ring-offset-2", // Use red ring
-                        "data-[state=active]:bg-[#FF3B30] data-[state=active]:text-white data-[state=active]:shadow-sm", // Active: Red bg, white text
-                        "data-[state=inactive]:bg-white data-[state=inactive]:text-[#FF3B30] data-[state=inactive]:border data-[state=inactive]:border-[#FF3B30] data-[state=inactive]:hover:bg-[#FF3B30]/10" // Inactive: White bg, red text/border
+                        "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2", // Use accent ring
+                        "data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm", // Active: Accent bg, accent-foreground text
+                        "data-[state=inactive]:bg-card data-[state=inactive]:text-accent data-[state=inactive]:border data-[state=inactive]:border-accent data-[state=inactive]:hover:bg-accent/10" // Inactive: Card bg, accent text/border
                     )}
                  >
                     { {
@@ -367,7 +375,7 @@ export default function RegisterPage() {
             {/* Front Image */}
             <div
                 className={cn(
-                    "relative aspect-square w-full rounded-lg bg-[#EEEEEE] flex flex-col items-center justify-center border-2 border-dashed border-[#E0E0E0] hover:border-[#00A651]/50 hover:bg-muted/80", // Use spec colors
+                    "relative aspect-square w-full rounded-lg bg-muted flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/80", // Use theme colors
                     !isLoading && "cursor-pointer" // Only show cursor if not loading
                 )}
                 onClick={() => !isLoading && frontImageRef.current?.click()}
@@ -376,8 +384,8 @@ export default function RegisterPage() {
                     <img src={URL.createObjectURL(idImageFront)} alt="Preview Front" className="h-full w-full object-cover rounded-lg" />
                  ) : (
                     <>
-                         <UploadCloud className="h-10 w-10 text-[#CCCCCC]" /> {/* Specific icon color */}
-                         <span className="mt-1 text-xs text-[#9E9E9E]">الوجه الأمامي*</span> {/* Placeholder color */}
+                         <UploadCloud className="h-10 w-10 text-muted-foreground" /> {/* Use theme icon color */}
+                         <span className="mt-1 text-xs text-muted-foreground">الوجه الأمامي*</span> {/* Use theme muted text */}
                      </>
                  )}
                  <input ref={frontImageRef} type="file" accept="image/*" disabled={isLoading}
@@ -386,7 +394,7 @@ export default function RegisterPage() {
             {/* Back Image */}
             <div
                  className={cn(
-                    "relative aspect-square w-full rounded-lg bg-[#EEEEEE] flex flex-col items-center justify-center border-2 border-dashed border-[#E0E0E0] hover:border-[#00A651]/50 hover:bg-muted/80",
+                    "relative aspect-square w-full rounded-lg bg-muted flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/80",
                      !isLoading && "cursor-pointer"
                  )}
                 onClick={() => !isLoading && backImageRef.current?.click()}
@@ -395,8 +403,8 @@ export default function RegisterPage() {
                      <img src={URL.createObjectURL(idImageBack)} alt="Preview Back" className="h-full w-full object-cover rounded-lg" />
                 ) : (
                      <>
-                        <UploadCloud className="h-10 w-10 text-[#CCCCCC]" />
-                        <span className="mt-1 text-xs text-[#9E9E9E]">الوجه الخلفي (اختياري)</span>
+                        <UploadCloud className="h-10 w-10 text-muted-foreground" />
+                        <span className="mt-1 text-xs text-muted-foreground">الوجه الخلفي (اختياري)</span>
                      </>
                 )}
                  <input ref={backImageRef} type="file" accept="image/*" disabled={isLoading}
@@ -406,7 +414,7 @@ export default function RegisterPage() {
 
          {/* Register Button */}
         <Button
-           className="mt-4 h-12 w-full rounded-lg bg-[#009944] text-base font-medium text-white hover:bg-[#009944]/90 active:bg-[#009944]/80" // Specific green, white text
+           className="mt-4 h-12 w-full rounded-lg bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 active:bg-primary/80" // Use primary color
            onClick={handleRegister}
            disabled={isLoading} // Disable button while loading
         >
@@ -414,11 +422,11 @@ export default function RegisterPage() {
         </Button>
 
         {/* Login Link */}
-        <p className="mt-3 text-center text-sm font-light text-[#9E9E9E]"> {/* Muted grey text */}
+        <p className="mt-3 text-center text-sm font-light text-muted-foreground"> {/* Muted theme text */}
           هل لديك حساب؟{' '}
           <Link href="/login" passHref className={cn(isLoading && "pointer-events-none opacity-50")}>
-             {/* Green link text */}
-            <span className="cursor-pointer font-medium text-[#009944] hover:underline hover:text-[#009944]/80">
+             {/* Primary link text */}
+            <span className="cursor-pointer font-medium text-primary hover:underline hover:text-primary/80">
               قم بالدخول
             </span>
           </Link>
@@ -427,7 +435,7 @@ export default function RegisterPage() {
       </div>
 
        {/* Footer */}
-       <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-white"> {/* White text */}
+       <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-primary-foreground/80"> {/* Lighter primary-foreground text */}
          برمجة وتصميم (يمن روبوت) 774541452 {/* Keep footer content as per spec */}
       </footer>
     </div>

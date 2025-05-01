@@ -15,24 +15,27 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useBalance } from '@/hooks/useBalance'; // Import balance hook
 
 export default function LoginPage() {
-  const [username, setUsername] = React.useState(''); // Assuming username is email for Firebase Auth
+  const [username, setUsername] = React.useState(''); // Can be email or phone number
   const [password, setPassword] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false); // Loading state for login button
   const router = useRouter();
   const { toast } = useToast();
   const { fetchBalance } = useBalance(); // Get fetchBalance function
 
-   // Convert phone number to email format if needed (adjust based on your Firebase setup)
+   // Convert phone number to email format if needed
    const formatEmail = (input: string): string => {
-     // Example: If users sign up with phone number as username, convert to a fake email
-     // Or, if they sign up with email directly, just return the input
+     // Check if input is already an email
      if (input.includes('@')) {
-       return input; // Already an email
+       return input;
      }
-     // Example conversion (replace with your actual logic if using phone numbers)
-     // This assumes you store users with email like '717168802@yourdomain.com'
-     // return `${input}@4now.app`; // Make sure this domain is enabled in Firebase Auth
-     return input; // If username is not email, Firebase needs Email/Password provider disabled or custom logic
+     // Assume it's a phone number and format it as an email
+     // Replace '4now.app' with the actual domain used during registration if different
+     const phoneRegex = /^\d+$/; // Simple check if it's just digits
+     if (phoneRegex.test(input)) {
+        return `${input}@4now.app`;
+     }
+     // If it's neither email nor phone number format, return as is (will likely fail Firebase auth)
+     return input;
    };
 
    const handleLogin = async () => {
@@ -40,9 +43,10 @@ export default function LoginPage() {
      console.log('Attempting login with:', username, password);
 
      try {
-       // Assuming username is used as email for Firebase Auth
-       // Adjust formatEmail if your setup is different
+       // Format username input as email
        const email = formatEmail(username);
+       console.log('Formatted email for login:', email);
+
        await signInWithEmailAndPassword(auth, email, password);
 
        console.log('Login successful, fetching balance and redirecting...');
@@ -55,7 +59,7 @@ export default function LoginPage() {
        await fetchBalance(); // Fetch balance after successful login
 
        // Auth state change listener in AuthProvider will handle redirection
-       // router.push('/dashboard'); // Usually not needed here
+       // No need for router.push('/dashboard');
 
      } catch (error: any) {
        console.error('Login failed:', error);
@@ -64,6 +68,8 @@ export default function LoginPage() {
            errorMessage = "اسم المستخدم أو كلمة المرور غير صحيحة.";
        } else if (error.code === 'auth/invalid-email') {
            errorMessage = "تنسيق اسم المستخدم (البريد الإلكتروني) غير صحيح.";
+       } else if (error.code === 'auth/too-many-requests') {
+           errorMessage = "تم حظر الدخول مؤقتاً بسبب محاولات كثيرة خاطئة. حاول مرة أخرى لاحقاً.";
        }
        toast({
          title: "فشل تسجيل الدخول",
@@ -136,7 +142,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md rounded-[24px] bg-card p-4 shadow-xl text-card-foreground">
         {/* Input Fields */}
         <div className="space-y-3">
-           {/* Username/Email Input */}
+           {/* Username/Phone Input */}
            <div className="relative">
             <Input
               type="text" // Use text, handle email formatting in login function
@@ -164,6 +170,7 @@ export default function LoginPage() {
               )}
               dir="rtl"
               disabled={isLoading}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleLogin(); }} // Allow login on Enter key
             />
             <Lock className="absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 transform text-muted-foreground" />
           </div>
@@ -173,7 +180,7 @@ export default function LoginPage() {
         <Button
            className="mt-4 h-12 w-full rounded-lg bg-primary text-base font-medium text-primary-foreground hover:bg-primary/90 active:bg-primary/80"
            onClick={handleLogin}
-           disabled={isLoading} // Disable button while loading
+           disabled={isLoading || !username || !password} // Disable if loading or fields empty
         >
           {isLoading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'دخول'}
         </Button>
@@ -182,7 +189,7 @@ export default function LoginPage() {
         <div className="mt-4 flex items-center justify-center space-x-6 rtl:space-x-reverse">
           {/* Use accent color for Face ID button background */}
           <button
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-accent shadow active:opacity-80"
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-accent shadow active:opacity-80 disabled:opacity-50"
             aria-label="الدخول باستخدام الوجه"
             onClick={handleFaceIdLogin}
             disabled={isLoading} // Disable biometric buttons during login attempt
@@ -191,7 +198,7 @@ export default function LoginPage() {
           </button>
            {/* Use secondary color for Fingerprint button background */}
           <button
-            className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary shadow active:opacity-80"
+            className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary shadow active:opacity-80 disabled:opacity-50"
             aria-label="الدخول باستخدام البصمة"
              onClick={handleFingerprintLogin}
              disabled={isLoading}
@@ -205,8 +212,8 @@ export default function LoginPage() {
           <Link href="/register" passHref>
              <Button
                 variant="secondary" // Use secondary variant
-                className="h-12 w-full rounded-lg text-base font-normal"
-                disabled={isLoading}
+                className={cn("h-12 w-full rounded-lg text-base font-normal", isLoading && "opacity-50 pointer-events-none")}
+                // disabled={isLoading} // Or use disabled attribute
              >
                فتح حساب
              </Button>
@@ -224,7 +231,7 @@ export default function LoginPage() {
         {/* Privacy Link */}
          <div className="mt-4 space-y-2 text-center">
            <Link href="/privacy" passHref>
-              <span className="cursor-pointer text-sm font-light text-primary underline hover:text-primary/80">
+              <span className={cn("cursor-pointer text-sm font-light text-primary underline hover:text-primary/80", isLoading && "opacity-50 pointer-events-none")}>
                  تعليمات | سياسة الخصوصية
               </span>
            </Link>
