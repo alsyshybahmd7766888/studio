@@ -2,7 +2,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebase'; // Changed back to alias path
 import { doc, getDoc } from 'firebase/firestore';
 
 interface AuthContextType {
