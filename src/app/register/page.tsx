@@ -140,11 +140,9 @@ export default function RegisterPage() {
     toast({ title: 'جاري التسجيل...', description: 'يتم إنشاء حسابك.', variant: 'default' });
 
     try {
-      // 1. Create User in Firebase Auth using Email/Password method
-      // This method works for both actual emails and phone numbers formatted as emails,
-      // provided the Email/Password provider is enabled in Firebase.
-      // If you want dedicated Phone Number Sign-In (with SMS verification),
-      // you need to implement `signInWithPhoneNumber` which is more complex.
+      // Ensure Email/Password sign-in is enabled in Firebase Console:
+      // Go to Firebase Console -> Authentication -> Sign-in method -> Enable Email/Password.
+      // This is the most common cause of the 'auth/configuration-not-found' or 'auth/operation-not-allowed' error.
       const userCredential = await createUserWithEmailAndPassword(auth, email, formData.password);
       const user = userCredential.user;
       console.log('Firebase Auth user created:', user.uid);
@@ -196,7 +194,7 @@ export default function RegisterPage() {
       router.push('/login'); // Redirect to login page
 
     } catch (error: any) {
-      console.error('Registration failed:', error);
+      console.error('Registration failed:', error.code, error.message); // Log error code and message
       let errorMessage = "حدث خطأ أثناء التسجيل. يرجى المحاولة مرة أخرى.";
        if (error.code === 'auth/email-already-in-use') {
            errorMessage = "اسم الدخول (البريد الإلكتروني/الهاتف) مستخدم بالفعل.";
@@ -206,8 +204,12 @@ export default function RegisterPage() {
            errorMessage = "كلمة المرور ضعيفة جداً (6 أحرف على الأقل).";
        } else if (error.code === 'auth/network-request-failed') {
             errorMessage = "فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.";
-       } else if (error.code === 'auth/configuration-not-found') {
-            errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة مسؤول النظام."; // Error if provider not enabled
+       } else if (error.code === 'auth/operation-not-allowed') { // Specific check for operation-not-allowed
+            errorMessage = "طريقة التسجيل غير مفعلة، رجاءً فعّلها في إعدادات Firebase.";
+       } else if (error.code === 'auth/configuration-not-found') { // Keep this as a fallback
+            errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة إعدادات Firebase.";
+       } else if (error.code === 'auth/invalid-api-key') {
+            errorMessage = "مفتاح Firebase API غير صحيح. يرجى التحقق من ملف .env.local.";
        }
        // Add other specific Firebase error codes as needed
 
