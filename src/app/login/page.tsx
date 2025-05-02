@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useToast } from "@/hooks/use-toast";
-import { auth } from '@/lib/firebase'; // Import Firebase auth instance
+import { auth } from '@/lib/firebase'; // Import Firebase auth instance using alias
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useBalance } from '@/hooks/useBalance'; // Import balance hook
 
@@ -22,7 +22,8 @@ export default function LoginPage() {
   const { toast } = useToast();
   const { fetchBalance } = useBalance(); // Get fetchBalance function
 
-   // Convert phone number to email format if needed
+   // Convert phone number to email format if needed for Email/Password auth
+   // Firebase treats phone number + password as Email/Password if registered that way.
    const formatEmail = (input: string): string => {
      // Check if input is already an email
      if (input.includes('@')) {
@@ -32,7 +33,7 @@ export default function LoginPage() {
      // Replace '4now.app' with the actual domain used during registration if different
      const phoneRegex = /^\d+$/; // Simple check if it's just digits
      if (phoneRegex.test(input)) {
-        return `${input}@4now.app`;
+        return `${input}@4now.app`; // Use the domain configured during registration
      }
      // If it's neither email nor phone number format, return as is (will likely fail Firebase auth)
      return input;
@@ -42,17 +43,17 @@ export default function LoginPage() {
      setIsLoading(true);
      console.log('Attempting login with:', username, password);
 
-      // Hardcoded login check
+      // Hardcoded login check (keep for testing/demo purposes)
       if (username === '717168802' && password === '12345678') {
           console.log('Hardcoded login successful, fetching balance and redirecting...');
           toast({
-            title: "نجاح تسجيل الدخول",
+            title: "نجاح تسجيل الدخول (Hardcoded)",
             description: "جارٍ التوجيه إلى لوحة التحكم...",
             variant: 'default',
           });
 
           // Simulate fetching balance and user data for hardcoded login
-          // You might want to set a dummy user state in the Auth context for testing
+          // Note: This bypasses real Firebase auth state, context might not update correctly
           // await fetchBalance(); // If balance logic is independent of real auth
 
           router.push('/dashboard'); // Manually redirect for hardcoded login
@@ -61,25 +62,28 @@ export default function LoginPage() {
       }
 
 
-     // --- Firebase Authentication Logic (kept for real users) ---
+     // --- Firebase Authentication Logic (using Email/Password provider) ---
      try {
-       // Format username input as email
+       // Format username input as email (handles both email and phone number inputs)
        const email = formatEmail(username);
-       console.log('Formatted email for login:', email);
+       console.log('Formatted email for signInWithEmailAndPassword:', email);
 
+       // Attempt sign in using the Email/Password method
        await signInWithEmailAndPassword(auth, email, password);
 
-       console.log('Login successful, fetching balance and redirecting...');
+       console.log('Firebase login successful, fetching balance and redirecting...');
        toast({
          title: "نجاح تسجيل الدخول",
          description: "جارٍ التوجيه إلى لوحة التحكم...",
          variant: 'default',
        });
 
-       await fetchBalance(); // Fetch balance after successful login
+       // Fetch balance after successful login (assuming balance is linked to UID)
+       // The hook should ideally fetch based on the authenticated user's UID.
+       await fetchBalance();
 
-       // Auth state change listener in AuthProvider will handle redirection
-       // No need for router.push('/dashboard');
+       // Auth state change listener in AuthProvider should handle redirection automatically
+       // router.push('/dashboard'); // Usually not needed here
 
      } catch (error: any) {
        console.error('Login failed:', error);
@@ -87,10 +91,15 @@ export default function LoginPage() {
        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
            errorMessage = "اسم المستخدم أو كلمة المرور غير صحيحة.";
        } else if (error.code === 'auth/invalid-email') {
-           errorMessage = "تنسيق اسم المستخدم (البريد الإلكتروني) غير صحيح.";
+           // This might occur if the phone number formatting failed or the input wasn't a valid email
+           errorMessage = "تنسيق اسم المستخدم (بريد إلكتروني/هاتف) غير صحيح.";
        } else if (error.code === 'auth/too-many-requests') {
            errorMessage = "تم حظر الدخول مؤقتاً بسبب محاولات كثيرة خاطئة. حاول مرة أخرى لاحقاً.";
+       } else if (error.code === 'auth/network-request-failed') {
+            errorMessage = "فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.";
        }
+       // Add other specific Firebase error codes as needed
+
        toast({
          title: "فشل تسجيل الدخول",
          description: errorMessage,
@@ -145,8 +154,8 @@ export default function LoginPage() {
 
 
   return (
-    // Background: Teal (#007B8A)
-    <div className="flex min-h-screen flex-col items-center bg-primary px-4 pt-[32px] text-primary-foreground">
+    // Background: Use background color from theme
+    <div className="flex min-h-screen flex-col items-center bg-background px-4 pt-[32px] text-foreground">
       {/* Status Bar Area (Placeholder) */}
       <div className="h-[24px] w-full"></div>
 
@@ -159,14 +168,14 @@ export default function LoginPage() {
        </div>
 
 
-      {/* Card Container - White bg, rounded 24px */}
+      {/* Card Container - Use card colors, rounded 24px */}
       <div className="w-full max-w-md rounded-[24px] bg-card p-4 shadow-xl text-card-foreground">
         {/* Input Fields */}
         <div className="space-y-3">
            {/* Username/Phone Input */}
            <div className="relative">
             <Input
-              type="text" // Use text, handle email formatting in login function
+              type="text" // Use text, handles both email and phone number inputs
               placeholder="اسم الدخول أو رقم الهاتف"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -260,7 +269,7 @@ export default function LoginPage() {
       </div>
 
       {/* Footer */}
-      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-primary-foreground/80">
+      <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-muted-foreground"> {/* Use muted foreground for footer */}
          برمجة وتصميم (يمن روبوت)
       </footer>
     </div>
