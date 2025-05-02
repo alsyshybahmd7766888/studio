@@ -2,7 +2,7 @@
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { onAuthStateChanged, User, signOut as firebaseSignOut } from 'firebase/auth';
-import { auth, db } from '../lib/firebase'; // Updated relative path
+import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 
 interface AuthContextType {
@@ -78,3 +78,4 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+
