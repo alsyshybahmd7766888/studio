@@ -90,6 +90,8 @@ export default function RegisterPage() {
      // Ensure this matches the logic in LoginPage
      const phoneRegex = /^\d+$/;
      if (phoneRegex.test(input)) {
+        // IMPORTANT: Firebase needs an email format even for phone numbers when using Email/Password provider.
+        // You must choose a consistent domain. Using `@4now.app` as a placeholder.
         return `${input}@4now.app`; // Use your configured domain
      }
      // Return as is if not email or phone format (will likely fail auth)
@@ -139,11 +141,13 @@ export default function RegisterPage() {
 
     try {
       // 1. Create User in Firebase Auth using Email/Password method
-      // Note: Firebase Phone Authentication is a separate method requiring SMS verification flow (RecaptchaVerifier, signInWithPhoneNumber).
-      // This implementation uses Email/Password provider, treating phone numbers as part of the 'email' field.
+      // This method works for both actual emails and phone numbers formatted as emails,
+      // provided the Email/Password provider is enabled in Firebase.
+      // If you want dedicated Phone Number Sign-In (with SMS verification),
+      // you need to implement `signInWithPhoneNumber` which is more complex.
       const userCredential = await createUserWithEmailAndPassword(auth, email, formData.password);
       const user = userCredential.user;
-      console.log('Firebase Auth user created (Email/Password method):', user.uid);
+      console.log('Firebase Auth user created:', user.uid);
 
        // --- Optional: Upload ID Images to Firebase Storage ---
        let frontImageUrl: string | null = null;
@@ -202,9 +206,10 @@ export default function RegisterPage() {
            errorMessage = "كلمة المرور ضعيفة جداً (6 أحرف على الأقل).";
        } else if (error.code === 'auth/network-request-failed') {
             errorMessage = "فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.";
+       } else if (error.code === 'auth/configuration-not-found') {
+            errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة مسؤول النظام."; // Error if provider not enabled
        }
        // Add other specific Firebase error codes as needed
-       // else if (error.code === 'auth/configuration-not-found') { ... } // Handled by enabling provider
 
       toast({
         title: 'فشل التسجيل',
@@ -225,8 +230,8 @@ export default function RegisterPage() {
   }
 
   return (
-    // Background: Use background color from theme
-    <div className="flex min-h-screen flex-col items-center bg-background px-4 pt-[32px] text-foreground">
+    // Background: Use primary color from theme
+    <div className="flex min-h-screen flex-col items-center bg-primary px-4 pt-[32px] text-primary-foreground">
       {/* Status Bar Area */}
       <div className="h-[24px] w-full"></div>
 

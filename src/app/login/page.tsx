@@ -33,7 +33,15 @@ export default function LoginPage() {
      // Replace '4now.app' with the actual domain used during registration if different
      const phoneRegex = /^\d+$/; // Simple check if it's just digits
      if (phoneRegex.test(input)) {
-        return `${input}@4now.app`; // Use the domain configured during registration
+        // IMPORTANT: Firebase Email/Password with phone requires the phone number
+        // to be formatted as email, but the exact format depends on how it was registered.
+        // If the registration script `enable-firebase-auth.js` enabled phone sign-in,
+        // Firebase might handle phone numbers directly or expect a specific email format.
+        // Assuming registration creates an email like `phonenumber@<project-id>.firebaseapp.com`
+        // or requires manual linking. Let's assume the registration process creates
+        // an email like `phonenumber@<configured-domain>`.
+        // Using '4now.app' as the placeholder domain. Replace if needed.
+        return `${input}@4now.app`; // Use the domain configured during registration or a standard one
      }
      // If it's neither email nor phone number format, return as is (will likely fail Firebase auth)
      return input;
@@ -69,6 +77,8 @@ export default function LoginPage() {
        console.log('Formatted email for signInWithEmailAndPassword:', email);
 
        // Attempt sign in using the Email/Password method
+       // Firebase Auth with Email/Password provider can accept either a registered email
+       // OR the email representation of a phone number if phone sign-in is enabled and configured correctly.
        await signInWithEmailAndPassword(auth, email, password);
 
        console.log('Firebase login successful, fetching balance and redirecting...');
@@ -97,6 +107,8 @@ export default function LoginPage() {
            errorMessage = "تم حظر الدخول مؤقتاً بسبب محاولات كثيرة خاطئة. حاول مرة أخرى لاحقاً.";
        } else if (error.code === 'auth/network-request-failed') {
             errorMessage = "فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.";
+       } else if (error.code === 'auth/configuration-not-found') {
+           errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة مسؤول النظام."; // More specific error
        }
        // Add other specific Firebase error codes as needed
 
@@ -155,7 +167,7 @@ export default function LoginPage() {
 
   return (
     // Background: Use background color from theme
-    <div className="flex min-h-screen flex-col items-center bg-background px-4 pt-[32px] text-foreground">
+    <div className="flex min-h-screen flex-col items-center bg-primary px-4 pt-[32px] text-primary-foreground">
       {/* Status Bar Area (Placeholder) */}
       <div className="h-[24px] w-full"></div>
 
