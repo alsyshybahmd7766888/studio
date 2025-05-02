@@ -22,7 +22,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { auth, db } from '../../lib/firebase'; // Changed to relative path
+import { auth, db } from '../../lib/firebase'; // Updated relative path
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 // import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Optional: For storing ID images
@@ -44,7 +44,7 @@ export default function RegisterPage() {
   const [idImageFront, setIdImageFront] = React.useState<File | null>(null);
   const [idImageBack, setIdImageBack] = React.useState<File | null>(null);
   const frontImageRef = React.useRef<HTMLInputElement>(null);
-  const backImageRef = React.useRef<HTMLVideoElement>(null);
+  const backImageRef = React.useRef<HTMLVideoElement>(null); // Corrected ref type for video element if used, keep as Input if it's an input
 
   const router = useRouter();
   const { toast } = useToast();
@@ -220,10 +220,11 @@ export default function RegisterPage() {
     }
   };
 
-  const handleBackImageRef = () => {
-    backImageRef.current?.click();
+  // Use HTMLInputElement for backImageRef if it's an input
+  const handleBackImageRefClick = () => {
+    (backImageRef as React.RefObject<HTMLInputElement>)?.current?.click();
   }
-  const handleFrontImageRef = () => {
+  const handleFrontImageRefClick = () => {
     frontImageRef.current?.click();
   }
 
@@ -361,9 +362,9 @@ export default function RegisterPage() {
              {(['personal-id', 'passport', 'commercial-reg', 'family-card'] as const).map((type) => (
                  <TabsTrigger key={type} value={type} disabled={isLoading}
                     className={cn(
-                        "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 focus-visible:ring-offset-2", // Use accent ring
-                        "data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-sm", // Active: Accent bg, accent-foreground text
-                        "data-[state=inactive]:bg-card data-[state=inactive]:text-accent data-[state=inactive]:border data-[state=inactive]:border-accent data-[state=inactive]:hover:bg-accent/10" // Inactive: Card bg, accent text/border
+                        "h-10 rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2", // Use default ring
+                        "data-[state=active]:bg-destructive data-[state=active]:text-destructive-foreground data-[state=active]:shadow-sm", // Active: Destructive bg/text
+                        "data-[state=inactive]:bg-card data-[state=inactive]:text-destructive data-[state=inactive]:border data-[state=inactive]:border-destructive data-[state=inactive]:hover:bg-destructive/10" // Inactive: Card bg, destructive text/border
                     )}
                  >
                     { {
@@ -385,7 +386,7 @@ export default function RegisterPage() {
                     "relative aspect-square w-full rounded-lg bg-muted flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/80", // Use theme colors
                     !isLoading && "cursor-pointer" // Only show cursor if not loading
                 )}
-                onClick={handleFrontImageRef}
+                onClick={handleFrontImageRefClick} // Updated onClick handler
             >
                  {idImageFront ? (
                     <img src={URL.createObjectURL(idImageFront)} alt="Preview Front" className="h-full w-full object-cover rounded-lg" />
@@ -404,7 +405,7 @@ export default function RegisterPage() {
                     "relative aspect-square w-full rounded-lg bg-muted flex flex-col items-center justify-center border-2 border-dashed border-border hover:border-primary/50 hover:bg-muted/80",
                      !isLoading && "cursor-pointer"
                  )}
-                onClick={handleBackImageRef}
+                onClick={handleBackImageRefClick} // Updated onClick handler
             >
                 {idImageBack ? (
                      <img src={URL.createObjectURL(idImageBack)} alt="Preview Back" className="h-full w-full object-cover rounded-lg" />
@@ -414,7 +415,8 @@ export default function RegisterPage() {
                         <span className="mt-1 text-xs text-muted-foreground">الوجه الخلفي (اختياري)</span>
                      </>
                 )}
-                 <input ref={backImageRef} type="file" accept="image/*" disabled={isLoading}
+                 {/* Ensure backImageRef is used correctly if it's an input */}
+                 <input ref={backImageRef as React.RefObject<HTMLInputElement>} type="file" accept="image/*" disabled={isLoading}
                     onChange={(e) => handleFileChange(e, 'back')} className="hidden" aria-label="Upload back ID" />
             </div>
         </div>

@@ -1,6 +1,6 @@
 // src/app/api/recharge/route.ts
 import { NextResponse } from 'next/server';
-import { db } from '../../../lib/firebase'; // Changed to relative path
+import { db } from '../../../lib/firebase'; // Updated relative path
 import { doc, updateDoc, runTransaction, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import axios from 'axios'; // For calling external recharge APIs
 
@@ -41,21 +41,39 @@ export async function POST(req: Request) {
     if (packageId) {
         // Fetch package details from Firestore 'packages' collection (adjust path as needed)
         // Example path: /packages/Sabafon/sb-dp-yb-week or /packages/PUBG/pubg_60uc
-        const packageRef = doc(db, 'packages', operator, packageId);
+        // Assume a structure like /packages/{operator}/{packageId}
+        const packagePath = isGameRecharge ? `games/${operator}/${packageId}` : `mobile/${operator}/${packageId}`; // Example structure
+        const packageRef = doc(db, packagePath); // Adjust this path based on your actual Firestore structure
         const packageSnap = await getDoc(packageRef);
         if (!packageSnap.exists()) {
-            return NextResponse.json({ success: false, error: `Package ${packageId} not found for operator ${operator}.` }, { status: 404 });
+            return NextResponse.json({ success: false, error: `Package ${packageId} not found for operator ${operator}. Path: ${packagePath}` }, { status: 404 });
         }
         packageInfo = packageSnap.data();
         // Use priceYER for games, price for others (assuming this field exists)
         rechargeValue = isGameRecharge ? packageInfo.priceYER : packageInfo.price;
         if (typeof rechargeValue !== 'number' || rechargeValue <= 0) {
-            return NextResponse.json({ success: false, error: `Invalid price for package ${packageId}.` }, { status: 400 });
+             // Allow string price for specific cases like "حسب الفاتورة"
+             if (typeof packageInfo.price !== 'string') {
+                return NextResponse.json({ success: false, error: `Invalid price for package ${packageId}.` }, { status: 400 });
+             }
+            // Handle 'حسب الفاتورة' - maybe need amount from request?
+            if (packageInfo.price === 'حسب الفاتورة' || packageInfo.price === 'حسب المبلغ' || packageInfo.price === 'حسب الطلب') {
+                // For these cases, the 'amount' should have been provided in the request.
+                 if (!amount) {
+                     return NextResponse.json({ success: false, error: `Amount is required for package type '${packageInfo.price}'.` }, { status: 400 });
+                 }
+                 rechargeValue = Number(amount);
+                 if (isNaN(rechargeValue) || rechargeValue <= 0) {
+                     return NextResponse.json({ success: false, error: 'Invalid amount provided for variable price package.' }, { status: 400 });
+                 }
+            } else {
+                 return NextResponse.json({ success: false, error: `Invalid or unhandled price format for package ${packageId}.` }, { status: 400 });
+            }
         }
     } else if (amount) {
       // Direct recharge amount (likely not applicable for games, mainly mobile/ADSL)
       if (isGameRecharge) {
-        return NextResponse.json({ success: false, error: 'Direct amount recharge is not supported for games.' }, { status: 400 });
+        return NextResponse.json({ success: false, error: 'Direct amount recharge is not supported for games. Please select a package.' }, { status: 400 });
       }
        rechargeValue = Number(amount);
        if (isNaN(rechargeValue) || rechargeValue <= 0) {
@@ -104,8 +122,9 @@ export async function POST(req: Request) {
          // Fields for game recharge
          ...(isGameRecharge && { player_id: playerId }), // Conditionally add player ID
          // Package or amount
-         ...(packageId && !amount && { product_code: packageId }), // Send package ID if not direct amount
-         ...(amount && !packageId && { amount: rechargeValue }), // Send amount if direct recharge
+         // Adjust logic based on how your provider expects package vs amount
+         ...(packageId && { product_code: packageId }), // Send package ID
+         amount: rechargeValue, // Send the final determined amount
          // Operator specific fields might be needed here based on providerConfig or operator name
          // Example: some APIs might need operator name explicitly
          // operator: operator,
@@ -120,6 +139,7 @@ export async function POST(req: Request) {
       const headers = { Authorization: `Bearer ${providerConfig.apiKey}`, 'Content-Type': 'application/json' };
 
       // --- REAL API CALL (uncomment when ready) ---
+       /*
       try {
           const apiResponse = await axios.post(providerConfig.url, apiPayload, { headers, timeout: 45000 }); // 45s timeout
           apiResponseData = apiResponse.data;
@@ -134,22 +154,23 @@ export async function POST(req: Request) {
           apiError = err.response?.data?.message || err.response?.data?.error || err.message || 'External API Error';
           apiResponseData = err.response?.data || { error: apiError }; // Store error response
       }
+      */
       // --- END REAL API CALL ---
 
 
       // --- SIMULATION (remove when using real API call) ---
-      // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-      // apiSuccess = Math.random() > 0.2; // 80% success rate
-      // if (apiSuccess) {
-      //     apiResponseData = { status: 'success', message: `Simulated recharge successful for ${phoneNumber || playerId}.`, transaction_id: `SIM_${Date.now()}` };
-      //     providerTxId = apiResponseData.transaction_id;
-      //     apiError = null;
-      // } else {
-      //     apiResponseData = { status: 'failed', message: 'Simulated recharge failure (e.g., provider error).' };
-      //     apiError = apiResponseData.message;
-      //     providerTxId = null; // No transaction ID on failure
-      // }
-      // console.log("Simulation Result:", { apiSuccess, apiResponseData, apiError });
+      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      apiSuccess = Math.random() > 0.2; // 80% success rate
+      if (apiSuccess) {
+          apiResponseData = { status: 'success', message: `Simulated recharge successful for ${phoneNumber || playerId}.`, transaction_id: `SIM_${Date.now()}` };
+          providerTxId = apiResponseData.transaction_id;
+          apiError = null;
+      } else {
+          apiResponseData = { status: 'failed', message: 'Simulated recharge failure (e.g., provider error).' };
+          apiError = apiResponseData.message;
+          providerTxId = null; // No transaction ID on failure
+      }
+      console.log("Simulation Result:", { apiSuccess, apiResponseData, apiError });
       // --- END SIMULATION ---
 
       if (!apiSuccess) {
@@ -205,9 +226,10 @@ export async function POST(req: Request) {
          // If req is already Response, use req.clone().json()
          // If req is Request, it might be ReadableStream, handle appropriately
          // Assuming Next.js API route context where req might be NodeNextRequest
-         if (req.bodyUsed) {
+         if ((req as any)._bodyUsed) { // Check if body was used (this is internal, might change)
              // Body already consumed, try to get from error context if available
              // This part is tricky without knowing the exact error source
+             console.warn("Request body already consumed, logging minimal failure details.");
          } else {
               // Clone and parse
              requestBody = await req.clone().json();
@@ -243,6 +265,7 @@ export async function POST(req: Request) {
                    error.message.includes("Invalid price") ? 400 :
                    error.message.includes("Invalid amount") ? 400 :
                    error.message.includes("not supported") ? 400 :
+                   error.message.includes("required for package type") ? 400 :
                    500; // Internal Server Error for others (API errors, etc.)
 
     return NextResponse.json({ success: false, error: error.message }, { status });
