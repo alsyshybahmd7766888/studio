@@ -15,7 +15,7 @@ const firebaseConfig = {
 };
 
 // Basic check to see if config values are actually loaded and not placeholders
-if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'YOUR_API_KEY' || firebaseConfig.apiKey.startsWith('AIzaSyDU6drUk09IvFY2jX30KBeFuSDV3O1L2k4')) { // Added check for the specific placeholder key provided earlier
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'YOUR_API_KEY') { // Removed the specific check for the user's API key start
   console.error(
     'Firebase configuration values are missing, invalid, or placeholders. ' +
     'Please ensure your .env.local file is correctly set up with valid Firebase project credentials ' +
