@@ -1,6 +1,6 @@
 // src/app/api/recharge/route.ts
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase'; // Assuming firebase.ts is in lib
+import { db } from '../../../lib/firebase'; // Changed to relative path
 import { doc, updateDoc, runTransaction, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import axios from 'axios'; // For calling external recharge APIs
 
@@ -24,11 +24,11 @@ async function getProviderConfig(operator: string): Promise<{ url: string; apiKe
 
 export async function POST(req: Request) {
   try {
-    const { userId, phoneNumber, operator, packageId, amount } = await req.json();
+    const { userId, phoneNumber, operator, packageId, amount, playerId } = await req.json(); // Added playerId
 
     // --- Validation ---
-    if (!userId || !phoneNumber || !operator || (!packageId && !amount)) {
-      return NextResponse.json({ success: false, error: 'Missing required fields.' }, { status: 400 });
+    if (!userId || (!phoneNumber && !playerId) || !operator || (!packageId && !amount)) { // Allow playerId instead of phoneNumber
+      return NextResponse.json({ success: false, error: 'Missing required fields (userId, operator, amount/packageId, and either phoneNumber or playerId).' }, { status: 400 });
     }
 
     // TODO: Add validation to ensure the request is coming from an authenticated user (e.g., verify ID token if sent)
@@ -36,21 +36,27 @@ export async function POST(req: Request) {
     // --- Determine Recharge Value & Package Info (Placeholder - Fetch from DB) ---
     let rechargeValue = 0;
     let packageInfo: any = null; // Replace 'any' with your Package interface
+    let isGameRecharge = operator.toUpperCase() === 'PUBG'; // Check if it's a game recharge
 
     if (packageId) {
-      // Fetch package details from Firestore 'packages' collection (adjust path as needed)
-      const packageRef = doc(db, 'packages', operator, packageId); // Example path: /packages/Sabafon/sb-dp-yb-week
-      const packageSnap = await getDoc(packageRef);
-      if (!packageSnap.exists()) {
-        return NextResponse.json({ success: false, error: `Package ${packageId} not found for operator ${operator}.` }, { status: 404 });
-      }
-      packageInfo = packageSnap.data();
-      rechargeValue = packageInfo.price; // Assuming 'price' field holds the cost
-      if (typeof rechargeValue !== 'number' || rechargeValue <= 0) {
-         return NextResponse.json({ success: false, error: `Invalid price for package ${packageId}.` }, { status: 400 });
-      }
+        // Fetch package details from Firestore 'packages' collection (adjust path as needed)
+        // Example path: /packages/Sabafon/sb-dp-yb-week or /packages/PUBG/pubg_60uc
+        const packageRef = doc(db, 'packages', operator, packageId);
+        const packageSnap = await getDoc(packageRef);
+        if (!packageSnap.exists()) {
+            return NextResponse.json({ success: false, error: `Package ${packageId} not found for operator ${operator}.` }, { status: 404 });
+        }
+        packageInfo = packageSnap.data();
+        // Use priceYER for games, price for others (assuming this field exists)
+        rechargeValue = isGameRecharge ? packageInfo.priceYER : packageInfo.price;
+        if (typeof rechargeValue !== 'number' || rechargeValue <= 0) {
+            return NextResponse.json({ success: false, error: `Invalid price for package ${packageId}.` }, { status: 400 });
+        }
     } else if (amount) {
-      // Direct recharge amount
+      // Direct recharge amount (likely not applicable for games, mainly mobile/ADSL)
+      if (isGameRecharge) {
+        return NextResponse.json({ success: false, error: 'Direct amount recharge is not supported for games.' }, { status: 400 });
+      }
        rechargeValue = Number(amount);
        if (isNaN(rechargeValue) || rechargeValue <= 0) {
             return NextResponse.json({ success: false, error: 'Invalid recharge amount.' }, { status: 400 });
@@ -88,41 +94,67 @@ export async function POST(req: Request) {
         throw new Error(`Insufficient balance. Required: ${rechargeValue}, Available: ${currentBalance}`);
       }
 
-      // --- Simulate or Call External Recharge API ---
-      console.log(`Attempting API call to ${operator} (${providerConfig.url}) for ${phoneNumber}...`);
-      // Replace with actual API call using axios
-      // const apiPayload = { ... }; // Construct payload based on provider docs
-      // const headers = { Authorization: `Bearer ${providerConfig.apiKey}`, 'Content-Type': 'application/json' };
-      // try {
-      //    const apiResponse = await axios.post(providerConfig.url, apiPayload, { headers });
-      //    apiResponseData = apiResponse.data;
-      //    // Determine success based on provider's response structure
-      //    apiSuccess = apiResponse.status >= 200 && apiResponse.status < 300 && apiResponseData?.status === 'success';
-      //    providerTxId = apiResponseData?.transaction_id || `PROVIDER_${Date.now()}`; // Adjust field name
-      // } catch (err: any) {
-      //    console.error("External API call failed:", err.response?.data || err.message);
-      //    apiSuccess = false;
-      //    apiError = err.response?.data?.message || err.message || 'External API Error';
-      // }
+      // --- Construct API Payload ---
+      // This structure depends heavily on the specific provider API
+      const apiPayload: any = {
+         // Common fields
+         transaction_id: `4NOW-${userId}-${Date.now()}`, // Unique ID
+         // Fields for mobile/ADSL recharge
+         ...(phoneNumber && { target_msisdn: phoneNumber }), // Conditionally add phone number
+         // Fields for game recharge
+         ...(isGameRecharge && { player_id: playerId }), // Conditionally add player ID
+         // Package or amount
+         ...(packageId && !amount && { product_code: packageId }), // Send package ID if not direct amount
+         ...(amount && !packageId && { amount: rechargeValue }), // Send amount if direct recharge
+         // Operator specific fields might be needed here based on providerConfig or operator name
+         // Example: some APIs might need operator name explicitly
+         // operator: operator,
+      };
+       // Clean up payload - remove null/undefined values if the API requires it
+       Object.keys(apiPayload).forEach(key => apiPayload[key] === undefined && delete apiPayload[key]);
 
-      // --- SIMULATION ---
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
-      apiSuccess = Math.random() > 0.2; // 80% success rate
-      if (apiSuccess) {
-          apiResponseData = { status: 'success', message: `Simulated recharge successful for ${phoneNumber}.`, transaction_id: `SIM_${Date.now()}` };
-          providerTxId = apiResponseData.transaction_id;
-          apiError = null;
-      } else {
-          apiResponseData = { status: 'failed', message: 'Simulated recharge failure (e.g., provider error).' };
-          apiError = apiResponseData.message;
-          providerTxId = null; // No transaction ID on failure
+
+      // --- Simulate or Call External Recharge API ---
+      console.log(`Attempting API call to ${operator} (${providerConfig.url}) for ${phoneNumber || playerId}...`);
+      console.log("Payload:", apiPayload);
+      const headers = { Authorization: `Bearer ${providerConfig.apiKey}`, 'Content-Type': 'application/json' };
+
+      // --- REAL API CALL (uncomment when ready) ---
+      try {
+          const apiResponse = await axios.post(providerConfig.url, apiPayload, { headers, timeout: 45000 }); // 45s timeout
+          apiResponseData = apiResponse.data;
+          // Determine success based on provider's response structure (THIS WILL VARY!)
+          apiSuccess = apiResponse.status >= 200 && apiResponse.status < 300 && (apiResponseData?.status === 'success' || apiResponseData?.success === true); // Adjust success check
+          providerTxId = apiResponseData?.transaction_id || apiResponseData?.provider_tx_id || `PROVIDER_${Date.now()}`; // Adjust field name
+          console.log("API Response Status:", apiResponse.status);
+          console.log("API Response Data:", apiResponseData);
+      } catch (err: any) {
+          console.error("External API call failed:", err.response?.data || err.message);
+          apiSuccess = false;
+          apiError = err.response?.data?.message || err.response?.data?.error || err.message || 'External API Error';
+          apiResponseData = err.response?.data || { error: apiError }; // Store error response
       }
-      console.log("Simulation Result:", { apiSuccess, apiResponseData, apiError });
+      // --- END REAL API CALL ---
+
+
+      // --- SIMULATION (remove when using real API call) ---
+      // await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate network delay
+      // apiSuccess = Math.random() > 0.2; // 80% success rate
+      // if (apiSuccess) {
+      //     apiResponseData = { status: 'success', message: `Simulated recharge successful for ${phoneNumber || playerId}.`, transaction_id: `SIM_${Date.now()}` };
+      //     providerTxId = apiResponseData.transaction_id;
+      //     apiError = null;
+      // } else {
+      //     apiResponseData = { status: 'failed', message: 'Simulated recharge failure (e.g., provider error).' };
+      //     apiError = apiResponseData.message;
+      //     providerTxId = null; // No transaction ID on failure
+      // }
+      // console.log("Simulation Result:", { apiSuccess, apiResponseData, apiError });
       // --- END SIMULATION ---
 
       if (!apiSuccess) {
         // If API call failed, abort the transaction (balance won't be deducted)
-        // Log the failed transaction attempt
+        // Log the failed transaction attempt later outside the transaction
         throw new Error(apiError || 'Recharge API call failed.');
       }
 
@@ -139,13 +171,14 @@ export async function POST(req: Request) {
     await addDoc(transactionsColRef, {
       userId: userId,
       operator: operator,
-      phoneNumber: phoneNumber,
+      targetIdentifier: phoneNumber || playerId, // Store phone or player ID
+      isGame: isGameRecharge,
       packageId: packageId || null,
       packageInfo: packageInfo, // Store basic package info
       amount: transactionResult.deductedAmount,
       status: 'completed',
       timestamp: serverTimestamp(),
-      providerResponse: apiResponseData, // Store provider response
+      providerResponse: apiResponseData, // Store provider success response
       providerTxId: transactionResult.providerTxId, // Store provider's transaction ID
       balanceBefore: transactionResult.deductedAmount + transactionResult.newBalance, // Calculate balance before
       balanceAfter: transactionResult.newBalance,
@@ -165,28 +198,52 @@ export async function POST(req: Request) {
     // --- Log Failed Transaction Attempt ---
     // Extract details from the request if possible (might need to re-parse or pass differently)
      let requestBody: any = {};
-     try { requestBody = await req.json(); } catch { /* ignore parsing error */ }
-     const { userId, phoneNumber, operator, packageId, amount } = requestBody;
+     let userId = 'unknown';
+     try {
+         // Re-read the request body safely
+         // req.json() consumes the body, so clone first if needed elsewhere or read once
+         // If req is already Response, use req.clone().json()
+         // If req is Request, it might be ReadableStream, handle appropriately
+         // Assuming Next.js API route context where req might be NodeNextRequest
+         if (req.bodyUsed) {
+             // Body already consumed, try to get from error context if available
+             // This part is tricky without knowing the exact error source
+         } else {
+              // Clone and parse
+             requestBody = await req.clone().json();
+             userId = requestBody.userId || 'unknown';
+         }
+     } catch (parseError){
+         console.error("Could not re-parse request body for error logging:", parseError);
+      }
 
-    if (userId) { // Only log if we have a user ID
+    const { operator, phoneNumber, playerId, packageId, amount } = requestBody;
+    const targetIdentifier = phoneNumber || playerId || 'unknown';
+    const isGame = operator?.toUpperCase() === 'PUBG';
+
+    if (userId !== 'unknown') { // Only log if we have a user ID
          const transactionsColRef = collection(db, 'transactions');
          await addDoc(transactionsColRef, {
-           userId: userId || 'unknown',
+           userId: userId,
            operator: operator || 'unknown',
-           phoneNumber: phoneNumber || 'unknown',
+           targetIdentifier: targetIdentifier,
+           isGame: isGame,
            packageId: packageId || null,
-           amountAttempted: amount || packageId ? 'package' : 'unknown', // Log attempted amount or package
+           amountAttempted: amount || (packageId ? 'package' : 'unknown'), // Log attempted amount or package
            status: 'failed',
            timestamp: serverTimestamp(),
            error: error.message, // Log the specific error
-           providerResponse: error.cause, // Store API response if it caused the error (needs custom Error)
+           providerResponse: apiResponseData || { error: error.message }, // Store provider error response if available
          }).catch(logError => console.error("Failed to log failed transaction:", logError));
     }
 
     // --- Return Error Response ---
     const status = error.message.includes("Insufficient balance") ? 402 : // Payment Required
-                   error.message.includes("not found") ? 404 : // Not Found (e.g., package, user)
-                   500; // Internal Server Error
+                   error.message.includes("not found") ? 404 : // Not Found (e.g., package, user, balance doc)
+                   error.message.includes("Invalid price") ? 400 :
+                   error.message.includes("Invalid amount") ? 400 :
+                   error.message.includes("not supported") ? 400 :
+                   500; // Internal Server Error for others (API errors, etc.)
 
     return NextResponse.json({ success: false, error: error.message }, { status });
   }

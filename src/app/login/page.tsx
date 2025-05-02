@@ -42,6 +42,26 @@ export default function LoginPage() {
      setIsLoading(true);
      console.log('Attempting login with:', username, password);
 
+      // Hardcoded login check
+      if (username === '717168802' && password === '12345678') {
+          console.log('Hardcoded login successful, fetching balance and redirecting...');
+          toast({
+            title: "نجاح تسجيل الدخول",
+            description: "جارٍ التوجيه إلى لوحة التحكم...",
+            variant: 'default',
+          });
+
+          // Simulate fetching balance and user data for hardcoded login
+          // You might want to set a dummy user state in the Auth context for testing
+          // await fetchBalance(); // If balance logic is independent of real auth
+
+          router.push('/dashboard'); // Manually redirect for hardcoded login
+          setIsLoading(false);
+          return; // Exit function after hardcoded login
+      }
+
+
+     // --- Firebase Authentication Logic (kept for real users) ---
      try {
        // Format username input as email
        const email = formatEmail(username);
@@ -131,12 +151,13 @@ export default function LoginPage() {
       <div className="h-[24px] w-full"></div>
 
       {/* Logo Header */}
-      <div className="mb-8 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-white shadow-lg">
-         <span className="text-3xl font-bold">
-           <span className="text-primary">٤</span>
-           <span className="text-accent">Now</span>
-         </span>
-      </div>
+       <div className="mb-8 flex h-[120px] w-[120px] items-center justify-center rounded-full bg-card shadow-lg">
+          <span className="text-3xl font-bold">
+              <span className="text-primary">٤</span>
+              <span className="text-accent">Now</span>
+          </span>
+       </div>
+
 
       {/* Card Container - White bg, rounded 24px */}
       <div className="w-full max-w-md rounded-[24px] bg-card p-4 shadow-xl text-card-foreground">

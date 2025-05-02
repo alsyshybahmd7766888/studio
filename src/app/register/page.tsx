@@ -22,7 +22,7 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
-import { auth, db } from '@/lib/firebase'; // Import Firebase auth and db
+import { auth, db } from '../../lib/firebase'; // Changed to relative path
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 // import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // Optional: For storing ID images
@@ -448,44 +448,3 @@ export default function RegisterPage() {
     </div>
   );
 }
-```</content>
-  </change>
-  <change>
-    <file>src/lib/firebase.ts</file>
-    <description>Removes hardcoded API keys from firebase configuration and relies on environment variables. Display a warning if api key is not defined.</description>
-    <content><![CDATA[// src/lib/firebase.ts
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
-// Import other Firebase services as needed, e.g., getStorage
-
-// Your web app's Firebase configuration - Ensure this matches your Firebase project settings
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY, // This should ideally be from process.env.NEXT_PUBLIC_FIREBASE_API_KEY
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN, // Ensure this matches your project
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID, // Correct and consistent project ID
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET, // Ensure this matches your project (or firebaseConfig.projectId + ".appspot.com")
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
-};
-
-// Basic check for placeholder or missing API key
-if (!firebaseConfig.apiKey) {
-  // Log an error in development, but avoid throwing to prevent crashing the build/app
-  // You should replace the hardcoded key with environment variables
-  console.warn("Firebase API Key might be missing. Check your .env.local file.");
-}
-
-// Initialize Firebase
-let app;
-if (!getApps().length) {
-  app = initializeApp(firebaseConfig);
-} else {
-  app = getApp(); // Use getApp() if already initialized
-}
-
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-// export const storage = getStorage(app); // Example for Storage
-
-export default app; // Export the initialized app
