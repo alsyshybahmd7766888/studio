@@ -2,7 +2,7 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { doc, onSnapshot, setDoc, getDoc } from 'firebase/firestore';
-import { db } from '../lib/firebase'; // Changed to relative path
+import { db } from '@/lib/firebase'; // Use alias path
 import { useAuth } from './useAuth'; // Import useAuth to get user ID
 
 interface BalanceContextType {
