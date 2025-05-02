@@ -20,7 +20,12 @@ export default function AuthenticatedLayout({
   useEffect(() => {
     // If loading is finished and there's no user, redirect to login
     if (!loading && !user) {
+      console.log('AuthenticatedLayout: No user found after loading, redirecting to /login');
       router.replace('/login'); // Use replace to avoid adding login to history stack
+    } else if (!loading && user) {
+        console.log('AuthenticatedLayout: User found, rendering children.');
+    } else {
+        console.log('AuthenticatedLayout: Still loading authentication state...');
     }
   }, [user, loading, router]);
 
@@ -34,7 +39,8 @@ export default function AuthenticatedLayout({
   }
 
   // If user is authenticated, render the children (the actual authenticated page)
-  if (user) {
+  // This condition ensures children are rendered only when loading is false AND user exists.
+  if (!loading && user) {
     return (
       <>
         {children}
@@ -45,6 +51,7 @@ export default function AuthenticatedLayout({
   }
 
   // If not loading and no user (should be caught by useEffect, but as a fallback)
-  // You could return null or a redirect component, but useEffect handles it.
+  // Return null or a minimal placeholder to avoid rendering anything sensitive.
+  // The useEffect redirect should handle the transition.
   return null;
 }
