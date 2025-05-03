@@ -39,46 +39,48 @@ export default function LoginPage() {
 
    const handleLogin = async () => {
      setIsLoading(true);
-     console.log('Attempting login with:', username, password);
+     console.log('LoginPage: handleLogin initiated with:', username);
 
       // --- Firebase Authentication Logic ---
      try {
-       // Format username input as email (handles both email and phone number inputs)
        const email = formatEmail(username);
-       console.log('Formatted email for signInWithEmailAndPassword:', email);
+       console.log('LoginPage: Attempting Firebase signInWithEmailAndPassword with email:', email);
 
        // Attempt sign in using the Email/Password method
        await signInWithEmailAndPassword(auth, email, password);
 
-       console.log('Firebase login successful, fetching balance...');
+       console.log('LoginPage: Firebase login successful.');
        toast({
          title: "نجاح تسجيل الدخول",
          description: "جارٍ التوجيه إلى لوحة التحكم...",
          variant: 'default',
        });
 
-       // Fetch balance after successful login.
+       console.log('LoginPage: Fetching balance...');
+       // Fetch balance after successful login. The listener might take time.
        await fetchBalance();
+       console.log('LoginPage: Balance fetch complete (or started).');
 
        // --- IMPORTANT ---
-       // Redirection should be handled automatically by the AuthProvider/AuthenticatedLayout
-       // detecting the change in authentication state. No explicit router.push here.
-       // The AuthenticatedLayout will render the dashboard once the user state is updated.
+       // Redirection is now handled by AuthenticatedLayout monitoring the auth state.
+       // No explicit router.push needed here.
 
      } catch (error: any) {
-       console.error('Login failed:', error);
+       console.error('LoginPage: Login failed:', error.code, error.message);
        let errorMessage = "فشل تسجيل الدخول. يرجى التحقق من بياناتك.";
-       if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-           errorMessage = "اسم المستخدم أو كلمة المرور غير صحيحة.";
-       } else if (error.code === 'auth/invalid-email') {
-           errorMessage = "تنسيق اسم المستخدم (بريد إلكتروني/هاتف) غير صحيح.";
-       } else if (error.code === 'auth/too-many-requests') {
-           errorMessage = "تم حظر الدخول مؤقتاً بسبب محاولات كثيرة خاطئة. حاول مرة أخرى لاحقاً.";
-       } else if (error.code === 'auth/network-request-failed') {
-            errorMessage = "فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.";
-       } else if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
-           errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة مسؤول النظام.";
-       }
+        if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+            errorMessage = "اسم المستخدم أو كلمة المرور غير صحيحة.";
+        } else if (error.code === 'auth/invalid-email') {
+            errorMessage = "تنسيق اسم المستخدم (بريد إلكتروني/هاتف) غير صحيح.";
+        } else if (error.code === 'auth/too-many-requests') {
+            errorMessage = "تم حظر الدخول مؤقتاً بسبب محاولات كثيرة خاطئة. حاول مرة أخرى لاحقاً.";
+        } else if (error.code === 'auth/network-request-failed') {
+             errorMessage = "فشل الاتصال بالشبكة. يرجى التحقق من اتصالك بالإنترنت.";
+        } else if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
+            errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة مسؤول النظام.";
+        } else if (error.code === 'auth/api-key-not-valid') {
+             errorMessage = "مفتاح Firebase API غير صحيح. يرجى التحقق من إعدادات المشروع.";
+        }
        // Add other specific Firebase error codes as needed
 
        toast({
@@ -87,13 +89,14 @@ export default function LoginPage() {
          variant: "destructive",
        });
      } finally {
+       console.log('LoginPage: handleLogin finished.');
        setIsLoading(false);
      }
    };
 
   const handleFingerprintLogin = () => {
     // --- Simulate WebAuthn/Biometric Login ---
-    console.log('Fingerprint login initiated (simulation)');
+    console.log('LoginPage: Fingerprint login initiated (simulation)');
     toast({
       title: "الدخول بالبصمة",
       description: "ميزة الدخول بالبصمة قيد التطوير.",
@@ -104,7 +107,7 @@ export default function LoginPage() {
 
   const handleFaceIdLogin = () => {
      // --- Simulate Face ID Login (Similar to Fingerprint) ---
-    console.log('Face ID login initiated (simulation)');
+    console.log('LoginPage: Face ID login initiated (simulation)');
      toast({
       title: "الدخول بالوجه",
       description: "ميزة الدخول بالوجه قيد التطوير.",
@@ -114,7 +117,7 @@ export default function LoginPage() {
   };
 
   const handleForgotPassword = () => {
-     console.log('Forgot password clicked');
+     console.log('LoginPage: Forgot password clicked');
      toast({
       title: "استعادة كلمة السر",
       description: "سيتم توجيهك لصفحة استعادة كلمة المرور قريباً.",
@@ -123,6 +126,8 @@ export default function LoginPage() {
      // router.push('/forgot-password'); // Implement forgot password page
   }
 
+  // Initial render log
+  console.log('LoginPage: Rendering...');
 
   return (
     // Background: Use primary color (#007B8A)
@@ -243,7 +248,7 @@ export default function LoginPage() {
 
       {/* Footer - White text */}
       <footer className="mt-auto pb-4 pt-6 text-center text-xs font-light text-primary-foreground">
-         برمجة وتصميم (يمن روبوت)
+         برمجة وتصميم (يمن روبوت) 774541452
       </footer>
     </div>
   );
