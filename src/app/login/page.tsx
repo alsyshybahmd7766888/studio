@@ -15,8 +15,8 @@ import { signInWithEmailAndPassword } from 'firebase/auth';
 import { useBalance } from '@/hooks/useBalance'; // Import balance hook
 
 export default function LoginPage() {
-  const [username, setUsername] = React.useState(''); // Can be email or phone number
-  const [password, setPassword] = React.useState('');
+  const [username, setUsername] = React.useState('717168802'); // Default username
+  const [password, setPassword] = React.useState('12345678'); // Default password
   const [isLoading, setIsLoading] = React.useState(false); // Loading state for login button
   const router = useRouter();
   const { toast } = useToast();
@@ -49,21 +49,21 @@ export default function LoginPage() {
        // Attempt sign in using the Email/Password method
        await signInWithEmailAndPassword(auth, email, password);
 
-       console.log('LoginPage: Firebase login successful.');
+       // Auth state change listener in useAuth will handle user update
+       console.log('LoginPage: Firebase login successful. Auth state change should trigger redirection via Layout.');
        toast({
          title: "نجاح تسجيل الدخول",
-         description: "جارٍ التوجيه إلى لوحة التحكم...",
+         description: "جارٍ التوجيه إلى لوحة التحكم...", // This message appears, but redirection relies on layout
          variant: 'default',
        });
 
-       console.log('LoginPage: Fetching balance...');
-       // Fetch balance after successful login. The listener might take time.
-       await fetchBalance();
-       console.log('LoginPage: Balance fetch complete (or started).');
+       // Fetch balance after successful login. Listener in useBalance handles updates.
+       // We can trigger an explicit fetch here if needed, but rely on listener primarily.
+       console.log('LoginPage: Triggering balance fetch...');
+       fetchBalance(); // No need to await if relying on listener
 
        // --- IMPORTANT ---
-       // Redirection is now handled by AuthenticatedLayout monitoring the auth state.
-       // No explicit router.push needed here.
+       // No explicit router.push here. AuthenticatedLayout handles redirection based on auth state.
 
      } catch (error: any) {
        console.error('LoginPage: Login failed:', error.code, error.message);
@@ -80,6 +80,8 @@ export default function LoginPage() {
             errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة مسؤول النظام.";
         } else if (error.code === 'auth/api-key-not-valid') {
              errorMessage = "مفتاح Firebase API غير صحيح. يرجى التحقق من إعدادات المشروع.";
+        } else if (error.code === 'auth/invalid-value-(password),-starting-an-object-value') {
+             errorMessage = "كلمة المرور غير صحيحة. الرجاء المحاولة مرة أخرى."; // Specific message for this error
         }
        // Add other specific Firebase error codes as needed
 
@@ -238,11 +240,12 @@ export default function LoginPage() {
 
         {/* Privacy Link - Teal text (#007B8A / primary) */}
          <div className="mt-4 space-y-2 text-center">
-           <Link href="/privacy" passHref>
-              <span className={cn("cursor-pointer text-sm font-light text-primary underline hover:text-primary/80", isLoading && "opacity-50 pointer-events-none")}>
+           {/* Removed link to /privacy as it's not implemented */}
+           {/* <Link href="/privacy" passHref> */}
+              <span className={cn("cursor-default text-sm font-light text-primary", isLoading && "opacity-50")}>
                  تعليمات | سياسة الخصوصية
               </span>
-           </Link>
+           {/* </Link> */}
          </div>
       </div>
 

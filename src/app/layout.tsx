@@ -23,7 +23,7 @@ export default function RootLayout({
         <AuthProvider> {/* Wrap with AuthProvider */}
           <BalanceProvider> {/* Wrap with BalanceProvider inside AuthProvider */}
             {children}
-            <Toaster /> {/* Keep Toaster */}
+            <Toaster /> {/* Ensure Toaster is here */}
           </BalanceProvider>
         </AuthProvider>
       </body>

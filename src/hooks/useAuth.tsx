@@ -1,9 +1,8 @@
-
 // TODO: Change import path for firebase to two levels up
 // In src/hooks/useAuth.tsx, update:
 //   import { auth, db } from '../lib/firebase';
 // to:
-//   import { auth, db } from '../../lib/firebase';
+//   import { auth, db } from '@/lib/firebase'; // Use alias path
 // src/hooks/useAuth.tsx
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
@@ -47,27 +46,29 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     console.log('AuthProvider: Setting up onAuthStateChanged listener.');
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       console.log('AuthProvider: onAuthStateChanged triggered.');
-      setUser(currentUser);
-      setLoading(true); // Assume loading until user data is fetched or confirmed absent
+      // User state changed, start loading until data is fetched/confirmed
+      setLoading(true);
+      setUser(currentUser); // Update user state immediately
 
       if (currentUser) {
-        console.log('AuthProvider: User detected:', currentUser.uid);
+        console.log('AuthProvider: User detected:', currentUser.uid, 'Email:', currentUser.email);
         try {
           const userDocRef = doc(db, 'users', currentUser.uid);
-          console.log("AuthProvider: Fetching user data from:", userDocRef.path);
+          console.log("AuthProvider: Fetching user data from Firestore path:", userDocRef.path);
           const userDocSnap = await getDoc(userDocRef);
           if (userDocSnap.exists()) {
-            console.log('AuthProvider: User data found.');
+            console.log('AuthProvider: Firestore user document found.');
             setUserData(userDocSnap.data() as UserData);
           } else {
-            console.warn("AuthProvider: No user document found in Firestore for UID:", currentUser.uid);
-            setUserData(null);
-            // Maybe log out the user if data is critical and missing?
-            // Or prompt for profile completion?
+            console.warn("AuthProvider: Firestore user document NOT found for UID:", currentUser.uid);
+            setUserData(null); // Explicitly set to null if not found
+            // Optional: Logout user or redirect if critical data is missing
+            // toast({ title: "خطأ في الحساب", description: "لم يتم العثور على بيانات المستخدم.", variant: "destructive" });
+            // await logout(); // Example: Force logout if data is essential
           }
         } catch (error: any) { // Use 'any' or specific FirestoreError
           console.error("AuthProvider: Error fetching user data:", error.code, error.message);
-          // Check specifically for Firestore offline error
+          // Handle specific Firestore errors (offline, permissions)
           if (error instanceof FirestoreError && (error.code === 'unavailable' || error.message.includes('offline'))) {
              toast({
                title: "غير متصل",
@@ -90,28 +91,33 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
           }
           setUserData(null); // Ensure userData is null on error
         } finally {
-           console.log('AuthProvider: Finished processing user data fetch, setting loading to false.');
-           setLoading(false); // Set loading false after fetch attempt completes
+           // Data fetch attempt complete (success or error), stop loading.
+           console.log('AuthProvider: Finished Firestore data fetch attempt. Setting loading to false.');
+           setLoading(false);
         }
       } else {
-        console.log('AuthProvider: No user detected.');
-        setUserData(null);
-        setLoading(false); // No user, not loading
+        // No user is logged in.
+        console.log('AuthProvider: No user detected (logged out).');
+        setUserData(null); // Clear user data
+        setLoading(false); // Stop loading as auth state is confirmed (no user)
       }
     });
 
+    // Cleanup function: Unsubscribe from the listener when the component unmounts.
     return () => {
       console.log('AuthProvider: Cleaning up onAuthStateChanged listener.');
       unsubscribe();
     };
-  }, [toast]);
+  // Add toast to dependency array if used within useEffect, although typically not needed for side effects.
+  }, [toast]); // Dependency array includes toast
 
+  // Logout function
   const logout = async () => {
-    console.log('AuthProvider: logout called.');
+    console.log('AuthProvider: logout function called.');
     try {
       await firebaseSignOut(auth);
-      console.log('AuthProvider: Firebase sign out successful.');
-      // State updates (user=null, userData=null, loading=false) handled by onAuthStateChanged
+      console.log('AuthProvider: Firebase sign out successful. State updates handled by listener.');
+      // The onAuthStateChanged listener will automatically handle setting user and userData to null.
     } catch (error) {
       console.error("AuthProvider: Error signing out: ", error);
        toast({
@@ -122,7 +128,9 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     }
   };
 
-  console.log(`AuthProvider: State updated - loading=${loading}, user=${!!user}, userData=${!!userData}`);
+  // Log state changes for debugging purposes
+  // This log might run frequently during state updates.
+  // console.log(`AuthProvider: Context value updated - loading=${loading}, user=${!!user}, userData=${!!userData}`);
 
   return (
     <AuthContext.Provider value={{ user, loading, userData, logout }}>
@@ -131,4 +139,5 @@ export const AuthProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   );
 };
 
+// Custom hook to use the Auth context
 export const useAuth = () => useContext(AuthContext);

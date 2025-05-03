@@ -5,7 +5,7 @@ import React, { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
-import { Toaster } from "@/components/ui/toaster";
+// Removed Toaster import as it's likely handled in the RootLayout
 
 export default function AuthenticatedLayout({
   children,
@@ -16,14 +16,16 @@ export default function AuthenticatedLayout({
   const router = useRouter();
 
   useEffect(() => {
-    console.log(`AuthenticatedLayout useEffect: loading=${loading}, user=${!!user}`);
+    // This effect runs when loading or user state changes.
+    console.log(`AuthenticatedLayout Effect Check: loading=${loading}, user=${!!user}`);
+    // If loading is finished and there is NO user, redirect to login.
     if (!loading && !user) {
       console.log('AuthenticatedLayout: No user found after loading, redirecting to /login');
-      router.replace('/login');
+      router.replace('/login'); // Use replace to avoid adding login page to history
     }
   }, [user, loading, router]);
 
-  // Show loader while checking auth state
+  // While the authentication state is loading, show a spinner.
   if (loading) {
     console.log('AuthenticatedLayout: Rendering loader while checking auth.');
     return (
@@ -33,18 +35,23 @@ export default function AuthenticatedLayout({
     );
   }
 
-  // If loading is done AND user exists, render the page content
+  // If loading is finished AND a user exists, render the children (the actual page).
+  // The useEffect above handles the case where loading is finished but there's no user.
   if (user) {
-    console.log('AuthenticatedLayout: Rendering authenticated content.');
-    return (
-      <>
-        {children}
-        {/* <Toaster /> */}
-      </>
-    );
+    console.log('AuthenticatedLayout: User authenticated, rendering children.');
+    return <>{children}</>;
+    // Toaster should ideally be in RootLayout to persist across route changes
+    // return (
+    //   <>
+    //     {children}
+    //     <Toaster />
+    //   </>
+    // );
   }
 
-  // If loading is done but no user (should be handled by useEffect redirect), return null
-  console.log('AuthenticatedLayout: Loading finished, but no user. Returning null (should redirect).');
+  // If loading is finished, but there is no user,
+  // the useEffect hook will handle the redirection.
+  // Return null to render nothing while the redirect occurs.
+  console.log('AuthenticatedLayout: Loading finished, no user. Waiting for redirect effect.');
   return null;
 }
