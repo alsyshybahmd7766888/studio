@@ -59,14 +59,10 @@ export default function LoginPage() {
        });
 
        // Fetch balance after successful login. Listener in useBalance handles updates.
-       // We can trigger an explicit fetch here if needed, but rely on listener primarily.
        console.log('LoginPage: Triggering balance fetch...');
-       await fetchBalance(); // Await fetchBalance to ensure it completes before potential redirect logic runs
+       fetchBalance(); // No need to await if relying on listener
 
-       // --- IMPORTANT ---
        // No explicit router.push here. AuthenticatedLayout handles redirection based on auth state.
-       // However, if AuthenticatedLayout isn't working correctly, manual redirect might be a temporary fix:
-       // router.push('/dashboard');
 
      } catch (error: any) {
        console.error('LoginPage: Login failed:', error.code, error.message);
@@ -82,7 +78,7 @@ export default function LoginPage() {
         } else if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
             errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة مسؤول النظام.";
         } else if (error.code === 'auth/api-key-not-valid') {
-             errorMessage = "مفتاح Firebase API غير صحيح. يرجى التحقق من إعدادات المشروع في ملف .env.local.";
+             errorMessage = "مفتاح Firebase API غير صحيح. يرجى التحقق من إعدادات المشروع.";
         } else if (error.code === 'auth/invalid-value-(password),-starting-an-object-value') {
              errorMessage = "كلمة المرور غير صحيحة. الرجاء المحاولة مرة أخرى."; // Specific message for this error
         }
@@ -102,23 +98,41 @@ export default function LoginPage() {
   const handleFingerprintLogin = () => {
     // --- Simulate WebAuthn/Biometric Login ---
     console.log('LoginPage: Fingerprint login initiated (simulation)');
-    toast({
-      title: "الدخول بالبصمة",
-      description: "ميزة الدخول بالبصمة قيد التطوير.",
-      variant: 'default',
-    });
-    // Placeholder for actual WebAuthn implementation
+    if (navigator.credentials && window.PublicKeyCredential) {
+       // Placeholder for actual WebAuthn API calls
+       toast({
+         title: "الدخول بالبصمة",
+         description: "جاري محاولة التعرف على البصمة...",
+         variant: 'default',
+       });
+       // Example: navigator.credentials.get({ publicKey: ... })
+    } else {
+      toast({
+        title: "غير مدعوم",
+        description: "متصفحك لا يدعم الدخول بالبصمة (WebAuthn).",
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleFaceIdLogin = () => {
      // --- Simulate Face ID Login (Similar to Fingerprint) ---
     console.log('LoginPage: Face ID login initiated (simulation)');
-     toast({
-      title: "الدخول بالوجه",
-      description: "ميزة الدخول بالوجه قيد التطوير.",
-      variant: 'default',
-    });
-    // Placeholder for actual implementation
+     if (navigator.credentials && window.PublicKeyCredential) {
+       // Placeholder for actual WebAuthn API calls (often same as fingerprint)
+       toast({
+         title: "الدخول بالوجه",
+         description: "جاري محاولة التعرف على الوجه...",
+         variant: 'default',
+       });
+       // Example: navigator.credentials.get({ publicKey: ... })
+     } else {
+      toast({
+        title: "غير مدعوم",
+        description: "متصفحك لا يدعم الدخول بالوجه (WebAuthn).",
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleForgotPassword = () => {

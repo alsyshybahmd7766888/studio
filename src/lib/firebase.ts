@@ -1,5 +1,4 @@
-// src/lib/firebase.ts
-import { initializeApp, getApps } from 'firebase/app';
+import { initializeApp, getApps } from 'firebase/app'; // Ensure getApps is imported
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
@@ -15,36 +14,17 @@ const firebaseConfig = {
 };
 
 // Basic check to see if config values are actually loaded and not placeholders
-// Note: Removed the specific key check as it was causing errors even with valid keys sometimes.
-// Rely on Firebase SDK errors for invalid keys.
 if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   console.error(
     'Firebase configuration values (apiKey or projectId) seem missing or invalid. ' +
     'Please ensure your .env.local file is correctly set up with valid Firebase project credentials ' +
     'and restart the development server (npm run dev).'
   );
-  // Optionally throw an error in production to prevent deployment with bad config
-  // if (process.env.NODE_ENV === 'production') {
-  //   throw new Error("Firebase configuration is missing or invalid.");
-  // }
 }
 
 // Initialize Firebase only if it hasn't been initialized yet
-let app;
-if (!getApps().length) {
-    try {
-        app = initializeApp(firebaseConfig);
-        console.log("Firebase Initialized Successfully");
-    } catch (e) {
-        console.error("Error initializing Firebase:", e);
-        // Optionally re-throw or handle the error appropriately
-        // throw e; // Uncomment to stop execution on initialization error
-    }
-} else {
-    app = getApps()[0];
-    console.log("Firebase Already Initialized");
-}
-
+// Use getApps() to prevent re-initialization in HMR scenarios
+const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
 
 let authInstance: ReturnType<typeof getAuth>;
 let dbInstance: ReturnType<typeof getFirestore>;
@@ -52,16 +32,12 @@ let dbInstance: ReturnType<typeof getFirestore>;
 try {
   authInstance = getAuth(app);
   dbInstance = getFirestore(app);
-  console.log("Firebase Auth and Firestore Instances Created");
-  // Firestore collections ('users', 'balances', 'transactions', 'mobile', 'games')
-  // do not need to be explicitly created. They are automatically created
-  // when the first document is written to them.
 } catch (error) {
-  console.error("Error initializing Firebase services (getAuth/getFirestore):", error);
-  // Depending on the severity, you might want to re-throw the error
+  console.error("Error initializing Firebase services:", error);
+  // Avoid throwing error in dev to prevent app crash, rely on console error
   // throw error;
 }
 
-export const auth = authInstance!; // Use non-null assertion if you expect it to be initialized
-export const db = dbInstance!;   // Use non-null assertion
-
+// Export the instances, handling potential initialization errors gracefully
+export const auth = authInstance!;
+export const db = dbInstance!;
