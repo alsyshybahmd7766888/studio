@@ -1,26 +1,20 @@
-
-// src/lib/firebase.ts
 import { initializeApp, getApps } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth }        from 'firebase/auth';
+import { getFirestore }   from 'firebase/firestore';
 
-// Ensure environment variables are loaded correctly.
-// Check your .env.local file and make sure it's in the project root.
 const firebaseConfig = {
-  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
+  apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY!,
+  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN!,
+  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID!,
+  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET!,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID!,
+  appId:              process.env.NEXT_PUBLIC_FIREBASE_APP_ID!,
 };
 
 // Basic check to see if config values are actually loaded and not placeholders
-// Note: Removed the specific key check as it was causing errors even with valid keys sometimes.
-// Rely on Firebase SDK errors for invalid keys.
-if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
+if (!firebaseConfig.apiKey || firebaseConfig.apiKey === 'YOUR_API_KEY' || !firebaseConfig.projectId) {
   console.error(
-    'Firebase configuration values (apiKey or projectId) seem missing or invalid. ' +
+    'Firebase configuration values are missing, invalid, or placeholders. ' +
     'Please ensure your .env.local file is correctly set up with valid Firebase project credentials ' +
     'and restart the development server (npm run dev).'
   );
@@ -29,6 +23,7 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
   //   throw new Error("Firebase configuration is missing or invalid.");
   // }
 }
+
 
 // Initialize Firebase only if it hasn't been initialized yet
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApps()[0];
@@ -44,7 +39,10 @@ try {
   // when the first document is written to them.
 } catch (error) {
   console.error("Error initializing Firebase services:", error);
-  throw error; // Re-throw the error during development
+  // In a real app, you might want to handle this more gracefully,
+  // maybe show an error page or retry initialization.
+  // For development, re-throwing helps identify the issue quickly.
+  throw error;
 }
 
 export const auth = authInstance;
