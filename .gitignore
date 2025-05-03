@@ -33,18 +33,45 @@ yarn-error.log*
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# turbo
+.turbo
 
-# idx config files
-.idx
+# firebase
+firebase-debug.log*
+*.firebase.*
 
-# Firebase service account keys
-service-account.json
-service-account-*.json
-*.sa.json
+# idx files
+/.idx/
+/.modified
+service-account.json # If service account key is stored in root
+*.log
 
-# Genkit state
-.genkit/log/**
-.genkit/trace/**
+# Log files
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+.DS_Store
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Visual Studio Code Folders
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+# Project IDX specific files
+.idx/
+.modified
