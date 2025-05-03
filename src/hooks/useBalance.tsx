@@ -2,16 +2,16 @@
 "use client";
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { doc, onSnapshot, setDoc, getDoc, FirestoreError } from 'firebase/firestore';
-import { db } from '@/lib/firebase'; // Ensure alias path is correct
+import { db } from '@/lib/firebase'; // Use alias path
 import { useAuth } from './useAuth'; // Import useAuth to get user ID
 import { useToast } from '@/hooks/use-toast'; // Import useToast
 
 interface BalanceContextType {
   balance: number;
   loading: boolean;
-  setBalance: (b: number) => void; // Keep for potential manual override if needed
-  deductBalance: (amount: number) => Promise<boolean>; // Function to deduct balance
-  fetchBalance: () => Promise<void>; // Function to explicitly fetch balance
+  setBalance: (b: number) => void;
+  deductBalance: (amount: number) => Promise<boolean>;
+  fetchBalance: () => Promise<void>;
 }
 
 const BalanceContext = createContext<BalanceContextType>({
@@ -22,97 +22,111 @@ const BalanceContext = createContext<BalanceContextType>({
   fetchBalance: async () => {},
 });
 
+// Firestore collections ('balances') are created automatically
+// when the first document is written (e.g., during registration).
+
 export const BalanceProvider: React.FC<{children: ReactNode}> = ({ children }) => {
   const { user, loading: authLoading } = useAuth();
   const [balance, setBalanceState] = useState(0);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast(); // Get toast function
+  const { toast } = useToast();
 
   useEffect(() => {
     let unsubscribe: (() => void) | null = null;
 
     if (!authLoading && user) {
-      setLoading(true); // Start loading when user is available
-      const balanceDocRef = doc(db, 'balances', user.uid); // Use 'balances' collection, doc ID = user UID
-      console.log("BalanceProvider: Setting up balance listener for user:", user.uid);
+      setLoading(true);
+      const balanceDocRef = doc(db, 'balances', user.uid);
+      console.log("BalanceProvider: Setting up balance listener for user:", user.uid, "at path:", balanceDocRef.path);
 
       unsubscribe = onSnapshot(balanceDocRef, (docSnap) => {
         if (docSnap.exists()) {
-          setBalanceState(docSnap.data().amount || 0);
-          console.log("BalanceProvider: Balance updated:", docSnap.data().amount || 0);
+          const newBalance = docSnap.data().amount || 0;
+          setBalanceState(newBalance);
+          console.log("BalanceProvider: Balance updated via listener:", newBalance);
         } else {
-          // Initialize balance document if it doesn't exist
-          console.log("BalanceProvider: Balance document not found, initializing with 0.");
-          setDoc(balanceDocRef, { amount: 0 }).catch(console.error);
-          setBalanceState(0);
+          console.log("BalanceProvider: Balance document not found for user. Initializing with 0.");
+          // Firestore automatically creates the 'balances' collection if it doesn't exist
+          // when we write the first document.
+          setDoc(balanceDocRef, { amount: 0 })
+            .then(() => {
+                 console.log("BalanceProvider: Initial balance document created successfully.");
+                 setBalanceState(0); // Set state after successful initialization
+                 setLoading(false); // Ensure loading is false after init
+             })
+            .catch(error => {
+                console.error("BalanceProvider: Error initializing balance document:", error);
+                toast({ title: "خطأ", description: "فشل تهيئة رصيد المستخدم.", variant: "destructive" });
+                setLoading(false); // Stop loading even if init fails
+            });
+           // Don't set loading false immediately here, wait for setDoc result
+           return; // Exit early, loading state handled in setDoc promise/catch
         }
-        setLoading(false); // Stop loading after successful read/init
+        setLoading(false); // Stop loading after successful read
       }, (error: FirestoreError) => {
-        console.error("BalanceProvider: Error listening to balance changes:", error);
-        // Check for offline error
-        if (error.code === 'unavailable' || (error.message && error.message.includes('offline'))) {
+        console.error("BalanceProvider: Error listening to balance changes:", error.code, error.message);
+        if (error.code === 'unavailable' || error.message.includes('offline')) {
            toast({
              title: "غير متصل",
              description: "لا يمكن تحديث الرصيد حالياً. البيانات المعروضة قد تكون قديمة.",
              variant: "destructive",
-             duration: 5000, // Show for 5 seconds
+             duration: 5000,
            });
-           // Keep the last known balance, but indicate loading might be stalled
-           // setLoading(true); // Or set a specific offline state if needed
+        } else if (error.code === 'permission-denied') {
+             toast({
+                 title: "خطأ في الأذونات",
+                 description: "ليس لديك إذن للوصول إلى بيانات الرصيد.",
+                 variant: "destructive",
+             });
         } else {
            toast({
              title: "خطأ في الرصيد",
-             description: "حدث خطأ أثناء تحديث الرصيد.",
+             description: `حدث خطأ أثناء تحديث الرصيد (${error.code}).`,
              variant: "destructive",
            });
         }
-        // Don't reset balance to 0 on error, keep last known value?
-        // setBalanceState(0); // Reset balance on error might be misleading
-        setLoading(false); // Stop loading even if there's an error
+        // Keep the last known balance, but stop loading indicator
+        setLoading(false);
       });
     } else if (!authLoading && !user) {
-      // User logged out, reset balance and loading state
       console.log("BalanceProvider: User logged out, resetting balance.");
       setBalanceState(0);
       setLoading(false);
-      // Ensure listener is cleaned up if already active
-       if (unsubscribe) {
+      if (unsubscribe) {
          console.log("BalanceProvider: Cleaning up listener on logout.");
          unsubscribe();
          unsubscribe = null;
        }
     } else if (authLoading) {
         console.log("BalanceProvider: Waiting for authentication...");
-        setLoading(true); // Ensure loading is true while auth is loading
+        setLoading(true);
     }
 
-    // Cleanup listener on unmount or user change
     return () => {
       if (unsubscribe) {
-        console.log("BalanceProvider: Cleaning up balance listener on unmount/user change.");
+        console.log("BalanceProvider: Cleaning up balance listener.");
         unsubscribe();
       }
     };
-  }, [user, authLoading, toast]); // Re-run when user, authLoading, or toast changes
+  }, [user, authLoading, toast]);
 
-  // Function to manually set balance (less common with Firestore listener)
   const setBalance = (newBalance: number) => {
     if (user) {
       const balanceDocRef = doc(db, 'balances', user.uid);
       setDoc(balanceDocRef, { amount: newBalance }).catch(console.error);
-      // The listener will update the state, so no need to setBalanceState here
     }
   };
 
-  // Function to deduct balance (relies on API route)
   const deductBalance = async (amount: number): Promise<boolean> => {
+    // This function is primarily for UI checks before calling the API.
+    // The actual balance deduction happens within the API route's transaction.
      if (!user) {
       console.error("User not authenticated to deduct balance.");
       toast({ title: "خطأ", description: "يرجى تسجيل الدخول أولاً.", variant: "destructive" });
       return false;
     }
     if (balance < amount) {
-      console.error("Insufficient balance.");
+      console.error("Insufficient balance checked on client-side.");
        toast({
          title: "رصيد غير كافٍ",
          description: `رصيدك الحالي (${balance.toLocaleString()} ريال) غير كافٍ لهذه العملية.`,
@@ -120,13 +134,12 @@ export const BalanceProvider: React.FC<{children: ReactNode}> = ({ children }) =
        });
       return false;
     }
-    // Assume API call will handle actual deduction and listener will update state
-    console.log("BalanceProvider: deductBalance called, assuming API route will handle deduction.");
+    // Client-side check passed, allow API call
+    console.log("BalanceProvider: Client-side balance check passed.");
     return true;
   };
 
-   // Function to explicitly fetch balance if needed
-   const fetchBalance = async () => {
+  const fetchBalance = async () => {
     if (user) {
       setLoading(true);
       const balanceDocRef = doc(db, 'balances', user.uid);
@@ -137,28 +150,23 @@ export const BalanceProvider: React.FC<{children: ReactNode}> = ({ children }) =
           setBalanceState(docSnap.data().amount || 0);
           console.log("BalanceProvider: Manual fetch successful:", docSnap.data().amount || 0);
         } else {
-          console.log("BalanceProvider: Manual fetch - balance document not found.");
+          console.log("BalanceProvider: Manual fetch - balance document not found. Will attempt init.");
+          await setDoc(balanceDocRef, { amount: 0 }); // Attempt to initialize
           setBalanceState(0);
         }
       } catch (error: any) {
         console.error("BalanceProvider: Error fetching balance manually:", error);
-         if (error.code === 'unavailable' || (error.message && error.message.includes('offline'))) {
-             toast({
-               title: "غير متصل",
-               description: "لا يمكن جلب الرصيد حالياً. يرجى التحقق من اتصالك بالإنترنت.",
-               variant: "destructive",
-               duration: 5000,
-             });
+         if (error.code === 'unavailable' || error.message.includes('offline')) {
+             toast({ title: "غير متصل", description: "لا يمكن جلب الرصيد حالياً.", variant: "destructive", duration: 5000 });
          } else {
              toast({ title: "خطأ", description: "فشل جلب الرصيد يدوياً.", variant: "destructive" });
          }
-        // setBalanceState(0); // Keep last known balance?
       } finally {
         setLoading(false);
       }
     } else {
        console.log("BalanceProvider: Manual fetch skipped, no user.");
-       setLoading(false); // Ensure loading is false if no user
+       setLoading(false);
     }
   };
 
