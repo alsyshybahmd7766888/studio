@@ -40,6 +40,7 @@ export default function LoginPage() {
    const handleLogin = async () => {
      setIsLoading(true);
      console.log('LoginPage: handleLogin initiated with:', username);
+     console.log('Firebase Auth instance:', auth, auth?.config); // Added debug log
 
       // --- Firebase Authentication Logic ---
      try {
@@ -60,10 +61,12 @@ export default function LoginPage() {
        // Fetch balance after successful login. Listener in useBalance handles updates.
        // We can trigger an explicit fetch here if needed, but rely on listener primarily.
        console.log('LoginPage: Triggering balance fetch...');
-       fetchBalance(); // No need to await if relying on listener
+       await fetchBalance(); // Await fetchBalance to ensure it completes before potential redirect logic runs
 
        // --- IMPORTANT ---
        // No explicit router.push here. AuthenticatedLayout handles redirection based on auth state.
+       // However, if AuthenticatedLayout isn't working correctly, manual redirect might be a temporary fix:
+       // router.push('/dashboard');
 
      } catch (error: any) {
        console.error('LoginPage: Login failed:', error.code, error.message);
@@ -79,7 +82,7 @@ export default function LoginPage() {
         } else if (error.code === 'auth/configuration-not-found' || error.code === 'auth/operation-not-allowed') {
             errorMessage = "طريقة تسجيل الدخول هذه غير مفعلة. يرجى مراجعة مسؤول النظام.";
         } else if (error.code === 'auth/api-key-not-valid') {
-             errorMessage = "مفتاح Firebase API غير صحيح. يرجى التحقق من إعدادات المشروع.";
+             errorMessage = "مفتاح Firebase API غير صحيح. يرجى التحقق من إعدادات المشروع في ملف .env.local.";
         } else if (error.code === 'auth/invalid-value-(password),-starting-an-object-value') {
              errorMessage = "كلمة المرور غير صحيحة. الرجاء المحاولة مرة أخرى."; // Specific message for this error
         }
